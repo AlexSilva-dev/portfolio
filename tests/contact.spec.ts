@@ -17,11 +17,37 @@ vi.mock('../app/composables/useLocale', async () => {
   }
 })
 
+const nuxtApp = vi.hoisted(() => ({
+  clearError: vi.fn(),
+  headOptions: [] as Array<Record<string, unknown>>,
+}))
+
+// error.vue e app.vue importam de nuxt/app explicitamente para o mock do
+// vitest interceptar de forma determinística, no padrão do i18n.spec
+vi.mock('nuxt/app', () => ({
+  clearError: nuxtApp.clearError,
+  useHead: (options: Record<string, unknown>) => {
+    nuxtApp.headOptions.push(options)
+  },
+}))
+
+// O transform do Nuxt injeta os componentes do template via o alias #app,
+// o NuxtLayout real exige runtime do Nuxt, então o mock substitui por stubs
+vi.mock('#app/components/nuxt-layout', () => ({
+  default: { name: 'NuxtLayout', render: () => null },
+}))
+vi.mock('#app/components/nuxt-page', () => ({
+  default: { name: 'NuxtPage', render: () => null },
+}))
+
 import { useLocale } from '../app/composables/useLocale'
 import { dictionaries } from '../app/i18n'
+import { SITE_BASE_URL } from '../app/utils/site'
 import { useCopyEmail } from '../app/composables/useCopyEmail'
 import ContactSection from '../app/components/ContactSection.vue'
 import NotFoundPage from '../app/pages/404.vue'
+import ErrorPage from '../app/error.vue'
+import AppRoot from '../app/app.vue'
 
 const EMAIL = 'alexdsilva.dev@gmail.com'
 
@@ -58,6 +84,8 @@ function porTestId(root: HTMLElement, teste: string): HTMLElement {
 
 beforeEach(() => {
   vi.useFakeTimers()
+  nuxtApp.clearError.mockClear()
+  nuxtApp.headOptions.length = 0
   // O ref de locale vive no escopo do módulo mockado e sobrevive entre
   // testes, cada um precisa nascer em pt para não herdar o idioma do anterior
   ;(useLocale().locale as Ref<'pt' | 'en'>).value = 'pt'
@@ -234,8 +262,15 @@ describe('página 404', () => {
       dictionaries.pt.sections.notfound.message,
     )
     const voltar = porTestId(root, 'notfound-back-home') as HTMLAnchorElement
-    expect(voltar.getAttribute('href')).toBe('/')
+    expect(voltar.getAttribute('href')).toBe(SITE_BASE_URL)
     expect(voltar.textContent).toContain(dictionaries.pt.sections.notfound.backHome)
+    app.unmount()
+  })
+
+  it('não duplica o landmark main que o layout já fornece', () => {
+    const { root, app } = montar(NotFoundPage)
+
+    expect(root.querySelector('main')).toBeNull()
     app.unmount()
   })
 
@@ -254,6 +289,69 @@ describe('página 404', () => {
     expect(porTestId(root, 'notfound-back-home').textContent).toContain(
       dictionaries.en.sections.notfound.backHome,
     )
+    app.unmount()
+  })
+})
+
+describe('error page do Nuxt', () => {
+  it('serve a 404 customizada com o dicionário pt e botão de volta pro início', () => {
+    const { root, app } = montar(ErrorPage)
+
+    expect(porTestId(root, 'error-heading').textContent).toContain(
+      dictionaries.pt.sections.notfound.heading,
+    )
+    expect(porTestId(root, 'error-message').textContent).toContain(
+      dictionaries.pt.sections.notfound.message,
+    )
+    expect(porTestId(root, 'error-back-home').textContent).toContain(
+      dictionaries.pt.sections.notfound.backHome,
+    )
+    app.unmount()
+  })
+
+  it('respeita o idioma en escolhido', async () => {
+    const { root, app } = montar(ErrorPage)
+    const { locale } = useLocale()
+    ;(locale as Ref<'pt' | 'en'>).value = 'en'
+    await nextTick()
+
+    expect(porTestId(root, 'error-heading').textContent).toContain(
+      dictionaries.en.sections.notfound.heading,
+    )
+    expect(porTestId(root, 'error-message').textContent).toContain(
+      dictionaries.en.sections.notfound.message,
+    )
+    app.unmount()
+  })
+
+  it('botão de volta limpa o erro e redireciona pro início dentro da baseURL', async () => {
+    const { root, app } = montar(ErrorPage)
+
+    porTestId(root, 'error-back-home').click()
+    await flush()
+
+    expect(nuxtApp.clearError).toHaveBeenCalledWith({ redirect: SITE_BASE_URL })
+    app.unmount()
+  })
+})
+
+describe('app raiz', () => {
+  it('declara só o favicon relativo à baseURL, sem title estático que duplica o dicionário', () => {
+    const root = document.createElement('div')
+    document.body.appendChild(root)
+    const app = createApp(AppRoot)
+    app.component('NuxtLayout', { render: () => null })
+    app.component('NuxtPage', { render: () => null })
+    app.mount(root)
+
+    expect(nuxtApp.headOptions).toHaveLength(1)
+    const opcoes = nuxtApp.headOptions[0] as Record<string, unknown>
+    expect(opcoes.title).toBeUndefined()
+    expect(opcoes.meta).toBeUndefined()
+    const link = (opcoes.link as Array<Record<string, string>>)[0] as Record<string, string>
+    expect(link.rel).toBe('icon')
+    expect(link.type).toBe('image/x-icon')
+    expect(link.href).toBe(`${SITE_BASE_URL}favicon.ico`)
     app.unmount()
   })
 })

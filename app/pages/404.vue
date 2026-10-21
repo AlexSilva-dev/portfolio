@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import { SITE_BASE_URL } from '../utils/site'
+
 const { dictionary } = useLocale()
 </script>
 
 <template>
-  <main class="nao-encontrada">
+  <section class="nao-encontrada">
     <h1 class="nao-encontrada__titulo" data-testid="notfound-heading">
       {{ dictionary.sections.notfound.heading }}
     </h1>
@@ -11,13 +13,13 @@ const { dictionary } = useLocale()
       {{ dictionary.sections.notfound.message }}
     </p>
     <a
-      href="/"
+      :href="SITE_BASE_URL"
       class="nao-encontrada__voltar"
       data-testid="notfound-back-home"
     >
       {{ dictionary.sections.notfound.backHome }}
     </a>
-  </main>
+  </section>
 </template>
 
 <style scoped>
