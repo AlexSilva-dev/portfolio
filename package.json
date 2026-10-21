@@ -8,7 +8,7 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "deploy": "gh-pages -d .output/public",
+    "deploy": "gh-pages -d .output/public -b deploy -f -t",
     "test": "vitest run"
   },
   "devDependencies": {
