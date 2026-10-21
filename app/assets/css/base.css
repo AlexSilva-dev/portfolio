@@ -48,3 +48,13 @@ a {
 .section {
   padding-block: var(--space-section);
 }
+
+/* Regras recomendadas do Lenis para a rolagem dirigida pelo gsap.ticker */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
+}

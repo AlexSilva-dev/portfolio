@@ -1,14 +1,25 @@
 <script setup lang="ts">
-defineProps<{
-  kicker: string
-  title: string
-}>()
+import { useReveal } from '../composables/useReveal'
+
+withDefaults(
+  defineProps<{
+    kicker: string
+    title: string
+    numero?: string
+  }>(),
+  { numero: '' },
+)
+
+const raiz = ref<HTMLElement | null>(null)
+useReveal(raiz)
 </script>
 
 <template>
-  <div class="section-heading">
-    <p class="section-heading__kicker" data-testid="section-heading-kicker">{{ kicker }}</p>
-    <h2 class="section-heading__title" data-testid="section-heading-title">{{ title }}</h2>
+  <div ref="raiz" class="section-heading">
+    <p class="section-heading__kicker" data-testid="section-heading-kicker"><span v-if="numero" class="section-heading__numero">{{ numero }}</span>{{ kicker }}</p>
+    <h2 class="section-heading__title" data-testid="section-heading-title">
+      <span class="reveal-line">{{ title }}</span>
+    </h2>
   </div>
 </template>
 
@@ -27,9 +38,17 @@ defineProps<{
   text-transform: uppercase;
 }
 
+.section-heading__numero {
+  margin-right: 0.5rem;
+}
+
 .section-heading__title {
   color: var(--color-text);
   font-size: clamp(1.75rem, 3vw, 2.25rem);
   line-height: 1.2;
+}
+
+.section-heading__title .reveal-line {
+  display: inline-block;
 }
 </style>
