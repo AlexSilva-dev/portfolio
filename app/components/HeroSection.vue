@@ -1,13 +1,35 @@
 <script setup lang="ts">
 import StatCard from './StatCard.vue'
 import fotoHero from '../assets/img/alex-hero.jpg'
+import { useImageTrail } from '../composables/useImageTrail'
+import { useMagnetic } from '../composables/useMagnetic'
 
 const { dictionary } = useLocale()
 const hero = computed(() => dictionary.value.sections.hero)
+
+const heroEl = ref<HTMLElement | null>(null)
+const ctaPrimariaEl = ref<HTMLElement | null>(null)
+const ctaSecundariaEl = ref<HTMLElement | null>(null)
+
+// O rastro reusa a MESMA foto do hero com tratamentos de filtro CSS,
+// zero bytes novos de rede, decisao aprovada no gate 2.
+const TRATAMENTOS_TRAIL = [
+  'grayscale(1) contrast(1.15)',
+  'sepia(0.5) saturate(1.3)',
+  'hue-rotate(160deg) saturate(0.85) brightness(1.05)',
+  'contrast(1.35) brightness(0.8)',
+  'grayscale(0.55) sepia(0.25) contrast(1.1)',
+  'hue-rotate(-45deg) saturate(1.2) contrast(1.05)',
+]
+const itensTrilha = TRATAMENTOS_TRAIL.map((filtro) => ({ src: fotoHero, filtro }))
+
+useImageTrail(heroEl, itensTrilha)
+useMagnetic(ctaPrimariaEl)
+useMagnetic(ctaSecundariaEl)
 </script>
 
 <template>
-  <section id="hero" class="hero" data-testid="hero">
+  <section id="hero" ref="heroEl" class="hero" data-testid="hero">
     <div class="hero__conteudo">
       <div class="hero__texto">
         <p class="hero__kicker" data-testid="hero-kicker">{{ hero.kicker }}</p>
@@ -22,6 +44,7 @@ const hero = computed(() => dictionary.value.sections.hero)
           <a
             class="hero__cta hero__cta--primario"
             href="mailto:alexdsilva.dev@gmail.com"
+            ref="ctaPrimariaEl"
             data-testid="hero-cta-primary"
           >
             {{ hero.ctas.primary }}
@@ -29,6 +52,7 @@ const hero = computed(() => dictionary.value.sections.hero)
           <a
             class="hero__cta hero__cta--secundario"
             href="#experiencia"
+            ref="ctaSecundariaEl"
             data-testid="hero-cta-secondary"
           >
             {{ hero.ctas.secondary }}
@@ -63,8 +87,16 @@ const hero = computed(() => dictionary.value.sections.hero)
   background: var(--color-bg);
   color: var(--color-text);
   font-family: var(--font-sans);
+  overflow: hidden;
   padding-block: var(--space-section);
   padding-inline: clamp(1.25rem, 5vw, 4rem);
+  position: relative;
+}
+
+.hero__conteudo,
+.hero__stats {
+  position: relative;
+  z-index: 1;
 }
 
 .hero__conteudo {
@@ -165,6 +197,15 @@ const hero = computed(() => dictionary.value.sections.hero)
 .hero__foto {
   margin: 0;
   max-width: 24rem;
+}
+
+.hero :deep([data-image-trail] img) {
+  aspect-ratio: 4 / 5;
+  border: 1px solid color-mix(in srgb, var(--color-accent) 35%, transparent);
+  border-radius: 0.5rem;
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--color-text) 25%, transparent);
+  object-fit: cover;
+  width: 7.5rem;
 }
 
 .hero__foto img {
