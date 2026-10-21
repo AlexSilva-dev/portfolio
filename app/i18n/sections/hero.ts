@@ -1,27 +1,37 @@
 export const pt = {
-  kicker: '',
-  h1: '',
-  specialties: '',
-  sub: '',
-  badge: '',
-  stats: [] as string[],
+  kicker: 'Sócio-fundador e responsável técnico na AdSalesBrazil',
+  h1: 'Engenheiro de Software Full Stack',
+  specialties: 'Kotlin, Android e Vue.js',
+  sub: 'Há 3 anos levo produto do zero à produção, do app Android ao backend com IA.',
+  badge: 'Disponível pra oportunidades',
+  stats: [
+    { valor: 'R$ 15 mil', rotulo: 'recuperados por mês com a queda de inadimplência' },
+    { valor: '80%', rotulo: 'do atendimento resolvido por pipeline de IA' },
+    { valor: '3', rotulo: 'anos de experiência com produto em produção' },
+  ],
+  photoAlt: 'Foto de Alex Alves, engenheiro de software full stack, olhando para a câmera',
   ctas: {
-    primary: '',
-    secondary: '',
+    primary: 'Vamos conversar',
+    secondary: 'Ver experiência',
   },
 }
 
 export type HeroDict = typeof pt
 
 export const en: HeroDict = {
-  kicker: '',
-  h1: '',
-  specialties: '',
-  sub: '',
-  badge: '',
-  stats: [],
+  kicker: 'Co-founder and technical lead at AdSalesBrazil',
+  h1: 'Full Stack Software Engineer',
+  specialties: 'Kotlin, Android and Vue.js',
+  sub: 'For 3 years I have taken product from zero to production, from the Android app to the AI backend.',
+  badge: 'Available for opportunities',
+  stats: [
+    { valor: 'R$ 15 mil', rotulo: 'recovered per month by reducing delinquency' },
+    { valor: '80%', rotulo: 'of support resolved by an AI pipeline' },
+    { valor: '3', rotulo: 'years of experience with product in production' },
+  ],
+  photoAlt: 'Photo of Alex Alves, full stack software engineer, looking at the camera',
   ctas: {
-    primary: '',
-    secondary: '',
+    primary: "Let's talk",
+    secondary: 'See experience',
   },
 }
