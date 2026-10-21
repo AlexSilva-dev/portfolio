@@ -224,6 +224,31 @@ useMagnetic(ctaSecundariaEl)
   max-width: 64rem;
 }
 
+/* Altura baixa de desktop e notebooks: compacta respiros, título e foto
+   pra kicker, selo, título, especialidades, sub, foto e os 3 números
+   caberem acima da dobra em 1280x720 (evidência qa-ux). */
+@media (min-width: 768px) and (max-height: 820px) {
+  .hero {
+    padding-block: 3rem;
+  }
+
+  .hero__texto {
+    gap: 0.75rem;
+  }
+
+  .hero__titulo {
+    font-size: clamp(2rem, 3.5vw, 2.5rem);
+  }
+
+  .hero__foto {
+    max-width: 18rem;
+  }
+
+  .hero__stats {
+    margin-top: 1.5rem;
+  }
+}
+
 @media (max-width: 767px) {
   .hero__conteudo {
     grid-template-columns: 1fr;

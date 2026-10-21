@@ -1,3 +1,5 @@
+import { join } from 'node:path'
+import { readFileSync } from 'node:fs'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h } from 'vue'
 
@@ -97,6 +99,22 @@ describe('StatCard', () => {
       expect(root.textContent).toContain(stat.rotulo)
       document.body.innerHTML = ''
     }
+  })
+})
+
+describe('hero na dobra de 1280x720', () => {
+  const heroPath = join(import.meta.dirname, '..', 'app', 'components', 'HeroSection.vue')
+
+  it('declara breakpoint de altura baixa com respiros, título e foto reduzidos', () => {
+    const css = readFileSync(heroPath, 'utf-8')
+    const bloco = css.match(
+      /@media \(min-width: 768px\) and \(max-height: 820px\)\s*\{([\s\S]*?)\n\}/,
+    )?.[1]
+    expect(bloco).toBeTruthy()
+    expect(bloco).toMatch(/padding-block:\s*3rem/)
+    expect(bloco).toMatch(/font-size:\s*clamp\(2rem,\s*3\.5vw,\s*2\.5rem\)/)
+    expect(bloco).toMatch(/max-width:\s*18rem/)
+    expect(bloco).toMatch(/margin-top:\s*1\.5rem/)
   })
 })
 
