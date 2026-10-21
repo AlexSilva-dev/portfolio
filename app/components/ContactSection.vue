@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import SectionHeading from './SectionHeading.vue'
+
 const { dictionary } = useLocale()
 
 const EMAIL = 'alexdsilva.dev@gmail.com'
@@ -9,11 +11,12 @@ const { copied, copyEmail } = useCopyEmail(EMAIL)
 </script>
 
 <template>
-  <section id="contato" class="contato" aria-labelledby="contato-titulo" data-testid="contact-section">
-    <p class="contato__kicker">{{ dictionary.sections.contact.kicker }}</p>
-    <h2 id="contato-titulo" class="contato__heading">
-      {{ dictionary.sections.contact.heading }}
-    </h2>
+  <section id="contato" class="contato" data-testid="contact-section">
+    <SectionHeading
+      numero="05"
+      :kicker="dictionary.sections.contact.kicker"
+      :title="dictionary.sections.contact.heading"
+    />
     <p class="contato__sub">{{ dictionary.sections.contact.sub }}</p>
 
     <p class="contato__email" data-testid="contact-email">{{ EMAIL }}</p>
@@ -79,20 +82,6 @@ const { copied, copyEmail } = useCopyEmail(EMAIL)
   gap: 1rem;
   padding-block: var(--space-section);
   text-align: center;
-}
-
-.contato__kicker {
-  color: var(--color-accent);
-  font-family: var(--font-mono);
-  font-size: 0.875rem;
-  margin: 0;
-}
-
-.contato__heading {
-  color: var(--color-text);
-  font-family: var(--font-sans);
-  font-size: clamp(1.75rem, 4vw, 2.5rem);
-  margin: 0;
 }
 
 .contato__sub {
