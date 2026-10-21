@@ -1,13 +1,13 @@
 export const pt = {
-  heading: '',
-  message: '',
-  backHome: '',
+  heading: 'Página não encontrada',
+  message: 'O link que você abriu não existe mais.',
+  backHome: 'Voltar pro início',
 }
 
 export type NotfoundDict = typeof pt
 
 export const en: NotfoundDict = {
-  heading: '',
-  message: '',
-  backHome: '',
+  heading: 'Page not found',
+  message: 'The link you opened no longer exists.',
+  backHome: 'Back to home',
 }
