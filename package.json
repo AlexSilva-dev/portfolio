@@ -8,7 +8,7 @@
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "deploy": "npm run generate && gh-pages -d .output/public -b deploy -f -t",
+    "deploy": "npm run generate && cp .output/public/404/index.html .output/public/404.html && gh-pages -d .output/public -b deploy -f -t",
     "test": "vitest run"
   },
   "devDependencies": {
