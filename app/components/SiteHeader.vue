@@ -1,16 +1,21 @@
 <script setup lang="ts">
-const links = [
-  { href: '#sobre', rotulo: 'Sobre' },
-  { href: '#experiencia', rotulo: 'Experiência' },
-  { href: '#projetos', rotulo: 'Projetos' },
-  { href: '#tecnologias', rotulo: 'Tecnologias' },
-  { href: '#contato', rotulo: 'Contato' },
-]
+import { computed } from 'vue'
+import { useLocale } from '../composables/useLocale'
+
+const { dictionary } = useLocale()
+
+const links = computed(() => [
+  { href: '#sobre', rotulo: dictionary.value.sections.layout.nav.sobre },
+  { href: '#experiencia', rotulo: dictionary.value.sections.layout.nav.experiencia },
+  { href: '#projetos', rotulo: dictionary.value.sections.layout.nav.projetos },
+  { href: '#tecnologias', rotulo: dictionary.value.sections.layout.nav.tecnologias },
+  { href: '#contato', rotulo: dictionary.value.sections.layout.nav.contato },
+])
 </script>
 
 <template>
   <header class="site-header" data-testid="site-header">
-    <nav class="site-header__nav" aria-label="Navegação principal">
+    <nav class="site-header__nav" :aria-label="dictionary.sections.layout.nav.label">
       <a
         v-for="link in links"
         :key="link.href"

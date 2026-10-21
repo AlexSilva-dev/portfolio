@@ -88,7 +88,7 @@ export const en: ExperienceDict = {
         'Built an AI pipeline that resolves around 80% of customer support',
         'Developed ERP modules with PHP and Vue 3',
       ],
-      chips: ['PHP', 'Vue 3', 'IA'],
+      chips: ['PHP', 'Vue 3', 'AI'],
     },
   ],
 }

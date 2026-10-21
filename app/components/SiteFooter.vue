@@ -1,7 +1,13 @@
+<script setup lang="ts">
+import { useLocale } from '../composables/useLocale'
+
+const { dictionary } = useLocale()
+</script>
+
 <template>
   <footer class="site-footer" data-testid="site-footer">
     <p class="site-footer__texto">
-      2026 Alex Alves · construído com Nuxt e publicado no GitHub Pages
+      {{ dictionary.sections.layout.footer.copyright }}
     </p>
   </footer>
 </template>

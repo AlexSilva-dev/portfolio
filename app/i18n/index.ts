@@ -5,6 +5,7 @@ import { pt as about, en as aboutEn } from './sections/about'
 import { pt as tech, en as techEn } from './sections/tech'
 import { pt as contact, en as contactEn } from './sections/contact'
 import { pt as notfound, en as notfoundEn } from './sections/notfound'
+import { pt as layout, en as layoutEn } from './sections/layout'
 
 export const locales = ['pt', 'en'] as const
 
@@ -33,13 +34,14 @@ export type Dictionary = {
     tech: typeof tech
     contact: typeof contact
     notfound: typeof notfound
+    layout: typeof layout
   }
 }
 
 export const dictionaries: Record<Locale, Dictionary> = {
   pt: {
     meta: meta.pt,
-    sections: { hero, experience, projects, about, tech, contact, notfound },
+    sections: { hero, experience, projects, about, tech, contact, notfound, layout },
   },
   en: {
     meta: meta.en,
@@ -51,6 +53,7 @@ export const dictionaries: Record<Locale, Dictionary> = {
       tech: techEn,
       contact: contactEn,
       notfound: notfoundEn,
+      layout: layoutEn,
     },
   },
 }
