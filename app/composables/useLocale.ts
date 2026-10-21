@@ -1,4 +1,5 @@
-import { computed, useCookie, useHead, useState } from 'nuxt/app'
+import { computed } from 'vue'
+import { useCookie, useHead, useState } from 'nuxt/app'
 import { getDictionary, locales, type Locale } from '../i18n'
 
 const ONE_YEAR_IN_SECONDS = 60 * 60 * 24 * 365
