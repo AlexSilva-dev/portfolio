@@ -5,6 +5,7 @@ type VNodeLike = { value: unknown }
 
 const h = vi.hoisted(() => ({
   stateMap: new Map<string, VNodeLike>(),
+  preloadedState: new Map<string, unknown>(),
   cookieRefs: new Map<string, VNodeLike>(),
   cookieOptions: new Map<string, Record<string, unknown>>(),
   headOptions: [] as Array<Record<string, unknown>>,
@@ -14,7 +15,14 @@ vi.mock('nuxt/app', async () => {
   const { computed, ref } = await import('vue')
   return {
     computed,
+    tryUseNuxtApp: () => ({}),
     useState: (key: string, init: () => VNodeLike) => {
+      // Emula o Nuxt real: estado vindo do payload de prerender ignora o
+      // inicializador, exatamente o que acontece na hidratação de um site SSG.
+      if (h.preloadedState.has(key)) {
+        if (!h.stateMap.has(key)) h.stateMap.set(key, ref(h.preloadedState.get(key)))
+        return h.stateMap.get(key)
+      }
       if (!h.stateMap.has(key)) h.stateMap.set(key, ref(init()))
       return h.stateMap.get(key)
     },
@@ -33,6 +41,9 @@ vi.mock('nuxt/app', async () => {
     },
   }
 })
+
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 
 import { getDictionary, locales } from '../app/i18n'
 import { useLocale } from '../app/composables/useLocale'
@@ -75,6 +86,7 @@ function assertSameShape(pt: unknown, en: unknown, path = ''): void {
 
 beforeEach(() => {
   h.stateMap.clear()
+  h.preloadedState.clear()
   h.cookieRefs.clear()
   h.cookieOptions.clear()
   h.headOptions.length = 0
@@ -131,11 +143,22 @@ describe('useLocale', () => {
     expect(dictionary.value.sections.hero).toBe(hero.en)
   })
 
-  it('cookie é gravado com maxAge de 1 ano', () => {
+  it('cookie é gravado com path / e maxAge de 1 ano', () => {
     const { setLocale } = useLocale()
     setLocale('en')
+    expect(h.cookieOptions.get('locale')?.path).toBe('/')
     expect(h.cookieOptions.get('locale')?.maxAge).toBe(60 * 60 * 24 * 365)
     expect(unref(h.cookieRefs.get('locale') as VNodeLike)).toBe('en')
+  })
+
+  it('hidratação com payload congelado em pt e cookie en restaura en (persistência)', () => {
+    // Site SSG, o useState foi serializado no payload do build com pt
+    h.preloadedState.set('locale', 'pt')
+    // o browser tem o cookie gravado pelo toggle em visita anterior
+    h.cookieRefs.set('locale', { value: 'en' } as VNodeLike)
+    const { locale, dictionary } = useLocale()
+    expect(locale.value).toBe('en')
+    expect(dictionary.value.sections.hero).toBe(hero.en)
   })
 
   it('setLocale("en") troca o dicionário retornado sem recarregar', () => {
@@ -166,5 +189,22 @@ describe('useLocale', () => {
 
   it('locales aceita apenas pt e en', () => {
     expect(locales).toEqual(['pt', 'en'])
+  })
+})
+
+describe('layout default', () => {
+  // O layout depende do runtime do Nuxt (auto-import de ClientOnly), então o
+  // contrato de a11y é validado no template, e o binding do announcement é
+  // coberto pelos testes do composable acima.
+  const layoutSource = readFileSync(join(process.cwd(), 'app/layouts/default.vue'), 'utf-8')
+
+  it('template tem região role status com aria-live polite', () => {
+    expect(layoutSource).toMatch(/role="status"/)
+    expect(layoutSource).toMatch(/aria-live="polite"/)
+  })
+
+  it('região status está ligada ao announcement do useLocale', () => {
+    expect(layoutSource).toMatch(/\{\{\s*announcement\s*\}\}/)
+    expect(layoutSource).toMatch(/useLocale\(\)/)
   })
 })

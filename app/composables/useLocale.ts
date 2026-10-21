@@ -6,11 +6,20 @@ const ONE_YEAR_IN_SECONDS = 60 * 60 * 24 * 365
 
 export function useLocale() {
   const cookie = useCookie<Locale>('locale', {
+    path: '/',
     maxAge: ONE_YEAR_IN_SECONDS,
     default: () => 'pt',
   })
 
-  const locale = useState<Locale>('locale', () => locales.find((l) => l === cookie.value) ?? 'pt')
+  // Em SSG o useState é serializado no payload do build, então na hidratação o
+  // inicializador não roda de novo e o locale congelado no prerender vence o
+  // cookie real do browser. O cookie precisa ser reaplicado em todo setup.
+  const locale = useState<Locale>('locale', () => 'pt')
+  const fromCookie = locales.find((l) => l === cookie.value) ?? 'pt'
+  if (locale.value !== fromCookie) {
+    locale.value = fromCookie
+  }
+
   const announcement = useState<string>('locale-announcement', () => '')
 
   const dictionary = computed(() => getDictionary(locale.value))
