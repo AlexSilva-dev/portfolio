@@ -70,6 +70,18 @@ describe('tokens do tema', () => {
   })
 })
 
+describe('uso de tokens no Preloader', () => {
+  const preloaderPath = join(import.meta.dirname, '..', 'app', 'components', 'Preloader.vue')
+
+  it('cortina usa os tokens de tokens.css e não as vars legadas', () => {
+    const css = readFileSync(preloaderPath, 'utf-8')
+    expect(css).not.toMatch(/var\(--color-background\)/)
+    expect(css).not.toMatch(/var\(--color-heading\)/)
+    expect(css).toMatch(/background:\s*var\(--color-bg\)/)
+    expect(css).toMatch(/color:\s*var\(--color-text\)/)
+  })
+})
+
 describe('LangToggle', () => {
   function montar(localeInicial: string) {
     const { locale } = useLocale()

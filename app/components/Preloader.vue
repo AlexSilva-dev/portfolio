@@ -76,12 +76,12 @@ onBeforeUnmount(stopTimers)
   align-items: center;
   justify-content: center;
   gap: var(--space-section);
-  background: var(--color-background);
+  background: var(--color-bg);
 }
 
 .preloader__name {
   font-family: var(--font-sans);
-  color: var(--color-heading);
+  color: var(--color-text);
 }
 
 .preloader__counter {
