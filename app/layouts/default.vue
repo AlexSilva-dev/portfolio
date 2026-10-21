@@ -1,18 +1,12 @@
+<script setup lang="ts">
+import SiteHeader from '../components/SiteHeader.vue'
+import SiteFooter from '../components/SiteFooter.vue'
+</script>
 
-import NavbarDefault from '../components/NavbarDefault.vue';
 <template>
-    <header class="px-5">
-        <NavbarDefault></NavbarDefault>
-    </header>
-    <main class="px-5 xscroll-hidden">
-        <slot></slot>
-    </main>
+  <SiteHeader />
+  <main class="container">
+    <slot />
+  </main>
+  <SiteFooter />
 </template>
-
-<style scoped>
-.xscroll-hidden {
-    overflow-x: hidden;
-    overflow-y: hidden;
-
-}
-</style>
