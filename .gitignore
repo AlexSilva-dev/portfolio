@@ -18,6 +18,9 @@ logs
 .fleet
 .idea
 
+# Local nuxt config (stash residuo, fora do controle de versao)
+.nuxtrc
+
 # Local env files
 .env
 .env.*
