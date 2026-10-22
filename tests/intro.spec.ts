@@ -9,6 +9,7 @@ const { ScrollTriggerMock } = vi.hoisted(() => ({
   ScrollTriggerMock: {
     create: vi.fn(),
     update: vi.fn(),
+    refresh: vi.fn(),
   },
 }))
 
@@ -32,6 +33,7 @@ import { useLocale } from '../app/composables/useLocale'
 import {
   dividirEmPalavras,
   indicesDoDestaque,
+  OPACIDADE_APAGADA,
   useTextFill,
 } from '../app/composables/useTextFill'
 import SectionIntro from '../app/components/SectionIntro.vue'
@@ -363,12 +365,64 @@ describe('useTextFill no desktop', () => {
     expect(gatilho.scrub).toBe(true)
   })
 
+  it('acende com stagger por palavra no desktop', () => {
+    const fromToSpy = stubDesktop()
+    montarHospedeiroUseTextFill(TEXTO_PT)
+
+    const toVars = fromToSpy.mock.calls[0]?.[2] as Record<string, unknown>
+    expect(toVars.stagger).toBeGreaterThan(0)
+  })
+
+  it('o estado apagado tem contraste evidente contra o texto aceso', () => {
+    expect(
+      OPACIDADE_APAGADA,
+      'apagado fraco demais esconde o efeito de preenchimento do dono',
+    ).toBeLessThan(0.12)
+  })
+
+  it('quando a página termina de carregar os ativos refresca os gatilhos', () => {
+    stubDesktop()
+    montarHospedeiroUseTextFill(TEXTO_PT)
+
+    expect(ScrollTriggerMock.refresh).not.toHaveBeenCalled()
+    window.dispatchEvent(new Event('load'))
+    expect(ScrollTriggerMock.refresh).toHaveBeenCalledTimes(1)
+  })
+
+  it('o refresh agendado morre no unmount, sem listener órfão', () => {
+    stubDesktop()
+    montarHospedeiroUseTextFill(TEXTO_PT)
+    appsMontados.splice(0).forEach((app) => app.unmount())
+
+    window.dispatchEvent(new Event('load'))
+    expect(ScrollTriggerMock.refresh).not.toHaveBeenCalled()
+  })
+
+  it('fontes prontas também refrescam os gatilhos', async () => {
+    stubDesktop()
+    let resolverFontes: (() => void) | null = null
+    const fontesProntas = new Promise<void>((resolver) => {
+      resolverFontes = resolver
+    })
+    Object.defineProperty(document, 'fonts', {
+      configurable: true,
+      value: { ready: fontesProntas },
+    })
+
+    montarHospedeiroUseTextFill(TEXTO_PT)
+    expect(ScrollTriggerMock.refresh).not.toHaveBeenCalled()
+
+    resolverFontes?.()
+    await fontesProntas
+    expect(ScrollTriggerMock.refresh).toHaveBeenCalledTimes(1)
+  })
+
   it('o estado apagado sai do tween do JS, e o CSS do componente não esconde o texto', () => {
     const fromToSpy = stubDesktop()
     const { raiz } = montarHospedeiroUseTextFill(TEXTO_PT)
 
     const [, fromVars, toVars] = fromToSpy.mock.calls[0]
-    expect((fromVars as Record<string, unknown>).opacity).toBe(0.15)
+    expect((fromVars as Record<string, unknown>).opacity).toBe(OPACIDADE_APAGADA)
     expect((toVars as Record<string, unknown>).opacity).toBe(1)
     const fonte = readFileSync(
       join(import.meta.dirname, '..', 'app', 'composables', 'useTextFill.ts'),
@@ -458,7 +512,7 @@ describe('useTextFill no mobile', () => {
 
     expect(ScrollTriggerMock.create).not.toHaveBeenCalled()
     expect(setSpy).toHaveBeenCalledTimes(1)
-    expect((setSpy.mock.calls[0]?.[1] as Record<string, unknown>).opacity).toBe(0.15)
+    expect((setSpy.mock.calls[0]?.[1] as Record<string, unknown>).opacity).toBe(OPACIDADE_APAGADA)
     expect(toSpy).not.toHaveBeenCalled()
   })
 

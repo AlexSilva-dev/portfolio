@@ -2,6 +2,7 @@ import { onMounted, onUnmounted, watch, type Ref } from 'vue'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { usePrefersReducedMotion } from './usePrefersReducedMotion'
+import { agendarRefreshGatilhos } from '../utils/motion'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -9,8 +10,12 @@ const POINTER_FINE_QUERY = '(pointer: fine)'
 const SELETOR_PALAVRA = '.intro__palavra'
 const CLASSE_DESTAQUE = 'intro__palavra--destaque'
 
-/** Opacidade do estado apagado sobre o papel, aplicada só por JavaScript. */
-export const OPACIDADE_APAGADA = 0.15
+/**
+ * Opacidade do estado apagado sobre o papel, aplicada só por JavaScript.
+ * Baixa de propósito, o contraste contra a tinta acesa é o que torna o
+ * preenchimento perceptível ao narrar.
+ */
+export const OPACIDADE_APAGADA = 0.08
 
 export interface Palavra {
   texto: string
@@ -79,12 +84,15 @@ export function useTextFill(alvo: Ref<HTMLElement | null>, opcoes: OpcoesUseText
   let contexto: ReturnType<typeof gsap.context> | null = null
   let observador: IntersectionObserver | null = null
   let tweenAcender: gsap.core.Tween | null = null
+  let cancelarRefresh: () => void = () => {}
 
   const desativar = () => {
     observador?.disconnect()
     observador = null
     tweenAcender?.kill()
     tweenAcender = null
+    cancelarRefresh()
+    cancelarRefresh = () => {}
     contexto?.revert()
     contexto = null
   }
@@ -172,6 +180,9 @@ export function useTextFill(alvo: Ref<HTMLElement | null>, opcoes: OpcoesUseText
             },
           },
         )
+        // Imagens e fontes mudam as medidas depois do mount, sem refresh
+        // o scrub dispara em posições erradas de scroll.
+        cancelarRefresh = agendarRefreshGatilhos(() => ScrollTrigger.refresh())
         return
       }
 

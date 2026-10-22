@@ -33,6 +33,7 @@ const { ScrollTriggerMock } = vi.hoisted(() => ({
   ScrollTriggerMock: {
     create: vi.fn(),
     update: vi.fn(),
+    refresh: vi.fn(),
   },
 }))
 
@@ -240,9 +241,10 @@ describe('useReveal', () => {
       },
     })
 
-    const app = createApp(Hospedeiro)
-    app.mount(raiz)
-    return { app, secao: secao as unknown as HTMLElement }
+  const app = createApp(Hospedeiro)
+  appsMontados.push(app)
+  app.mount(raiz)
+  return { app, secao: secao as unknown as HTMLElement }
   }
 
   it('anima as linhas .reveal-line na primeira entrada da seção', () => {
@@ -300,6 +302,38 @@ describe('useReveal', () => {
 
     expect(fromSpy).not.toHaveBeenCalled()
   })
+
+  it('subida sutil das linhas, 10px com fade em vez de slide dramático', () => {
+    stubMatchMedia(true)
+    const fromSpy = vi.spyOn(gsap, 'from').mockImplementation(() => undefined as never)
+
+    montarSecaoComLinhas()
+
+    const vars = fromSpy.mock.calls[0]?.[1] as Record<string, unknown>
+    expect(vars.y).toBe(10)
+    expect(vars.opacity).toBe(0)
+    expect(vars, 'o slide de linha inteira escondia o efeito do dono').not.toHaveProperty(
+      'yPercent',
+    )
+  })
+
+  it('refresca os gatilhos quando a página termina de carregar e cancela no unmount', () => {
+    stubMatchMedia(true)
+    vi.spyOn(gsap, 'from').mockImplementation(() => undefined as never)
+
+    const { app } = montarSecaoComLinhas()
+
+    expect(ScrollTriggerMock.refresh).not.toHaveBeenCalled()
+    window.dispatchEvent(new Event('load'))
+    expect(ScrollTriggerMock.refresh).toHaveBeenCalledTimes(1)
+
+    app.unmount()
+    window.dispatchEvent(new Event('load'))
+    expect(
+      ScrollTriggerMock.refresh,
+      'listener de load órfão depois do unmount',
+    ).toHaveBeenCalledTimes(1)
+  })
 })
 
 describe('SectionHeading', () => {
@@ -310,6 +344,7 @@ describe('SectionHeading', () => {
     const raiz = document.createElement('div')
     document.body.appendChild(raiz)
     const app = createApp(SectionHeading, { kicker: 'Com o que eu trabalho', title: 'Tecnologias' })
+    appsMontados.push(app)
     app.mount(raiz)
     await nextTick()
 
@@ -330,6 +365,7 @@ describe('layout default', () => {
     const raiz = document.createElement('div')
     document.body.appendChild(raiz)
     const app = createApp(LayoutDefault)
+    appsMontados.push(app)
     app.component('ClientOnly', { template: '<div data-testid="client-only-stub"><slot /></div>' })
     app.mount(raiz)
     await nextTick()

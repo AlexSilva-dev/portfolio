@@ -2,11 +2,14 @@ import { onMounted, onUnmounted, watch, type Ref } from 'vue'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { usePrefersReducedMotion } from './usePrefersReducedMotion'
+import { agendarRefreshGatilhos } from '../utils/motion'
 
 gsap.registerPlugin(ScrollTrigger)
 
 const REVEAL_LINE_SELECTOR = '.reveal-line'
 const INICIO_ENTRADA = 'top 80%'
+/** Subida sutil da linha, em px, suficiente pra dar entrada sem sumir com o título. */
+const SUBIDA_LINHA_PX = 10
 
 /**
  * Reveal linha a linha na primeira entrada da seção. Os spans .reveal-line
@@ -19,6 +22,7 @@ export function useReveal(raiz: Ref<HTMLElement | null>) {
   const { prefersReducedMotion } = usePrefersReducedMotion()
 
   let contexto: ReturnType<typeof gsap.context> | null = null
+  let cancelarRefresh: () => void = () => {}
 
   const ativar = () => {
     const el = raiz.value
@@ -30,7 +34,7 @@ export function useReveal(raiz: Ref<HTMLElement | null>) {
       if (!linhas.length) return
 
       gsap.from(linhas, {
-        yPercent: 110,
+        y: SUBIDA_LINHA_PX,
         opacity: 0,
         duration: 0.7,
         stagger: 0.12,
@@ -41,10 +45,16 @@ export function useReveal(raiz: Ref<HTMLElement | null>) {
           once: true,
         },
       })
+
+      // Fontes e imagens mudam as medidas depois do mount, sem refresh o
+      // gatilho once dispara antes da linha entrar de fato em cena.
+      cancelarRefresh = agendarRefreshGatilhos(() => ScrollTrigger.refresh())
     }, el)
   }
 
   const desativar = () => {
+    cancelarRefresh()
+    cancelarRefresh = () => {}
     contexto?.revert()
     contexto = null
   }

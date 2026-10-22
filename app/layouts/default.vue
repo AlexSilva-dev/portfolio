@@ -4,6 +4,7 @@ import { tryUseNuxtApp } from 'nuxt/app'
 import SiteHeader from '../components/SiteHeader.vue'
 import SiteFooter from '../components/SiteFooter.vue'
 import Preloader from '../components/Preloader.vue'
+import CustomCursor from '../components/CustomCursor.vue'
 import { useLocale } from '../composables/useLocale'
 
 // O layout pode ser montado fora do contexto do Nuxt (specs Vue puros), onde
@@ -17,6 +18,9 @@ const { announcement } = tryUseNuxtApp()
 <template>
   <ClientOnly>
     <Preloader />
+  </ClientOnly>
+  <ClientOnly>
+    <CustomCursor />
   </ClientOnly>
   <SiteHeader />
   <main class="container">
