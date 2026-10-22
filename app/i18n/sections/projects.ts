@@ -1,6 +1,13 @@
 export const pt = {
   heading: 'Projetos',
   kicker: 'O que eu construo por conta própria',
+  verProjeto: 'Ver projeto',
+  meta: {
+    papel: 'Papel',
+    periodo: 'Período',
+    ano: 'Ano',
+    time: 'Time',
+  },
   items: [
     {
       name: 'CRM AdSalesBrazil',
@@ -34,6 +41,13 @@ export type ProjectsDict = typeof pt
 export const en: ProjectsDict = {
   heading: 'Projects',
   kicker: 'What I build on my own',
+  verProjeto: 'View project',
+  meta: {
+    papel: 'Role',
+    periodo: 'Period',
+    ano: 'Year',
+    time: 'Team',
+  },
   items: [
     {
       name: 'CRM AdSalesBrazil',
