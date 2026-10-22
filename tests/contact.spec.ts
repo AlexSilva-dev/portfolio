@@ -315,6 +315,16 @@ describe('ContactSection', () => {
     app.unmount()
   })
 
+  it('Copiar email é ação momentânea, sem aria-pressed, feedback vem do role status', () => {
+    instalarClipboard()
+    const { root, app } = montar(ContactSection)
+
+    const copiar = porTestId(root, 'contact-copy-email')
+    expect(copiar.hasAttribute('aria-pressed')).toBe(false)
+    expect(root.querySelector('[role="status"]')).toBeNull()
+    app.unmount()
+  })
+
   it('fonte do cartão usa o asset de código, véu navy, tinta e anel de foco claro sobre o fundo escuro', () => {
     expect(fonteContact).toMatch(
       /2560x1600-px-code-coding-computer-Computer-screen-Java-1288551-wallhere\.com\.jpg/,
@@ -324,6 +334,12 @@ describe('ContactSection', () => {
     expect(fonteContact).toMatch(
       /contato__veu\s*\{[^}]*color-mix\(in srgb, var\(--color-bg\)/,
     )
+  })
+
+  it('cartão ocupa cerca de 60 por cento da viewport no desktop, sem cap de max-width que o segure na metade', () => {
+    const cartao = fonteContact.match(/\.contato__cartao\s*\{([^}]*)\}/)?.[1] ?? ''
+    expect(cartao).toMatch(/width:\s*60%/)
+    expect(cartao).toMatch(/max-width:\s*72rem/)
   })
 })
 
@@ -437,7 +453,7 @@ describe('error page do Nuxt', () => {
 })
 
 describe('app raiz', () => {
-  it('declara só o favicon relativo à baseURL, sem title estático que duplica o dicionário', () => {
+  it('declara favicon relativo à baseURL e html lang ligado ao locale, sem title estático', () => {
     const root = document.createElement('div')
     document.body.appendChild(root)
     const app = createApp(AppRoot)
@@ -453,6 +469,25 @@ describe('app raiz', () => {
     expect(link.rel).toBe('icon')
     expect(link.type).toBe('image/x-icon')
     expect(link.href).toBe(`${SITE_BASE_URL}favicon.ico`)
+    expect(opcoes.htmlAttrs).toBeTruthy()
+    app.unmount()
+  })
+
+  it('html lang nasce pt e reage à troca de idioma, WCAG 3.1.1', async () => {
+    const root = document.createElement('div')
+    document.body.appendChild(root)
+    const app = createApp(AppRoot)
+    app.component('NuxtLayout', { render: () => null })
+    app.component('NuxtPage', { render: () => null })
+    app.mount(root)
+
+    const opcoes = nuxtApp.headOptions[0] as Record<string, unknown>
+    const htmlAttrs = opcoes.htmlAttrs as { lang: Ref<'pt' | 'en'> }
+    expect(htmlAttrs.lang.value).toBe('pt')
+
+    ;(useLocale().locale as Ref<'pt' | 'en'>).value = 'en'
+    await nextTick()
+    expect(htmlAttrs.lang.value).toBe('en')
     app.unmount()
   })
 })

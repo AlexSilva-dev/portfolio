@@ -126,7 +126,7 @@ const { copied, copyEmail } = useCopyEmail(EMAIL)
   align-items: center;
   gap: 1.5rem;
   margin-inline: auto;
-  max-width: 60rem;
+  max-width: 72rem;
   padding-block: clamp(3rem, 7vw, 6rem);
   padding-inline: clamp(1.5rem, 4vw, 3rem);
   position: relative;

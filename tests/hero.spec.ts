@@ -34,7 +34,8 @@ const STATS_EN = [
   { valor: '3', rotulo: 'years of experience with product in production' },
 ]
 
-const CHIPS = ['Kotlin', 'Android', 'Vue.js', 'IA aplicada', 'DevOps']
+const CHIPS_PT = ['Kotlin', 'Android', 'Vue.js', 'IA aplicada', 'DevOps']
+const CHIPS_EN = ['Kotlin', 'Android', 'Vue.js', 'AI applied', 'DevOps']
 
 describe('dicionário hero', () => {
   it('pt tem os textos exatos da ui-spec', () => {
@@ -64,6 +65,12 @@ describe('dicionário hero', () => {
 
   it('en tem os rótulos dos 3 números traduzidos', () => {
     expect(heroEn.stats).toEqual(STATS_EN)
+  })
+
+  it('chips com paridade pt e en, IA aplicada como único termo traduzido', () => {
+    expect(heroPt.chips).toEqual(CHIPS_PT)
+    expect(heroEn.chips).toEqual(CHIPS_EN)
+    expect(heroEn.chips).toHaveLength(heroPt.chips.length)
   })
 })
 
@@ -149,7 +156,15 @@ describe('HeroSection', () => {
     const chips = [...root.querySelectorAll('[data-testid="hero-chip"]')].map(
       (el) => el.textContent?.trim(),
     )
-    expect(chips).toEqual(CHIPS)
+    expect(chips).toEqual(CHIPS_PT)
+  })
+
+  it('renderiza os chips traduzidos em en, IA aplicada vira AI applied', () => {
+    const root = montar('en')
+    const chips = [...root.querySelectorAll('[data-testid="hero-chip"]')].map(
+      (el) => el.textContent?.trim(),
+    )
+    expect(chips).toEqual(CHIPS_EN)
   })
 
   it('renderiza os 3 números com rótulos preenchidos', () => {
@@ -252,5 +267,13 @@ describe('HeroSection composição editorial (CSS)', () => {
     expect(bloco).toMatch(/grid-template-columns:\s*1fr/)
     expect(bloco).toMatch(/order:\s*2/)
     expect(bloco).toMatch(/flex:\s*1 1 100%/)
+  })
+
+  it('display compacto de altura baixa fica dentro da faixa de 11 a 13vw do ui-spec', () => {
+    const bloco =
+      css.match(/@media \(min-width: 768px\) and \(max-height: 820px\)\s*\{([\s\S]*?)\n\}/)?.[1] ?? ''
+    const tamanho = bloco.match(/\.hero__titulo\s*\{([^}]*)\}/)?.[1] ?? ''
+    expect(tamanho).toMatch(/font-size:\s*clamp\([^,]+,\s*1[123]vw,\s*[^)]+\)/)
+    expect(tamanho).not.toMatch(/8\.5vw/)
   })
 })

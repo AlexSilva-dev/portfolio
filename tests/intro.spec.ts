@@ -321,6 +321,40 @@ describe('useTextFill no desktop', () => {
     app.unmount()
     expect(reverter).toHaveBeenCalledTimes(1)
   })
+
+  it('ciclo duplo de troca de idioma reverte o contexto anterior antes de criar o novo', async () => {
+    stubMatchMedia(true)
+    vi.spyOn(gsap, 'fromTo').mockImplementation(() => undefined as never)
+    const reverter = vi.fn()
+    const contextoSpy = vi
+      .spyOn(gsap, 'context')
+      .mockImplementation(() => ({ revert: reverter }) as never)
+
+    let fonte = ref('pt')
+    const alvo = ref<HTMLElement | null>(null)
+    montarComponente(
+      defineComponent({
+        setup() {
+          useTextFill(alvo, {
+            texto: () => (fonte.value === 'pt' ? TEXTO_PT : TEXTO_EN),
+          })
+          return () => h('p', { ref: alvo }, 'inicial')
+        },
+      }),
+    )
+    await nextTick()
+
+    expect(contextoSpy).toHaveBeenCalledTimes(1)
+    expect(reverter).not.toHaveBeenCalled()
+
+    fonte.value = 'en'
+    await nextTick()
+    fonte.value = 'pt'
+    await nextTick()
+
+    expect(contextoSpy).toHaveBeenCalledTimes(3)
+    expect(reverter, 'cada reativação deve reverter o contexto anterior, sem leak de ScrollTrigger').toHaveBeenCalledTimes(2)
+  })
 })
 
 describe('useTextFill no mobile', () => {

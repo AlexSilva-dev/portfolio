@@ -132,6 +132,10 @@ export function useTextFill(alvo: Ref<HTMLElement | null>, opcoes: OpcoesUseText
     const el = alvo.value
     if (!el || typeof window === 'undefined') return
 
+    // Reativação (troca de idioma, mudança de movimento) derruba o contexto
+    // anterior antes de criar o novo, sem leak de ScrollTrigger
+    desativar()
+
     const texto = opcoes.texto()
 
     // Movimento reduzido, texto integralmente aceso, sem spans e sem

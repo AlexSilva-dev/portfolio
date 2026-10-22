@@ -40,6 +40,14 @@ describe('conteúdo estruturado de projetos', () => {
   it('SaaS de marketplaces não tem url pública', () => {
     expect(projects[3].url).toBeUndefined()
   })
+
+  it('conteúdo canônico não carrega texto de idioma, metadados vivem no dicionário', () => {
+    for (const project of projects) {
+      expect(project, `papel não deveria viver no conteúdo do projeto ${project.slug}`).not.toHaveProperty('papel')
+      expect(project, `período não deveria viver no conteúdo do projeto ${project.slug}`).not.toHaveProperty('periodo')
+      expect(project, `time não deveria viver no conteúdo do projeto ${project.slug}`).not.toHaveProperty('time')
+    }
+  })
 })
 
 describe('dicionário projects', () => {
@@ -57,8 +65,34 @@ describe('dicionário projects', () => {
     expect(pt.items).toHaveLength(4)
     expect(en.items).toHaveLength(4)
     for (const item of [...pt.items, ...en.items]) {
-      expect(Object.keys(item).sort()).toEqual(['badge', 'chips', 'name', 'summary'])
+      expect(Object.keys(item).sort()).toEqual([
+        'badge',
+        'chips',
+        'name',
+        'papel',
+        'periodo',
+        'summary',
+        'time',
+      ])
     }
+  })
+
+  it('metadados papel, período e time em pt', () => {
+    expect(pt.items.map((item) => ({ papel: item.papel, periodo: item.periodo, time: item.time }))).toEqual([
+      { papel: 'Sócio-fundador e responsável técnico', periodo: '2026 até hoje', time: 'AdSalesBrazil' },
+      { papel: 'Idealizador e desenvolvedor solo', periodo: '2025 a 2026', time: 'Projeto pessoal' },
+      { papel: 'Autor', periodo: '2025', time: 'Projeto pessoal' },
+      { papel: 'Idealizador', periodo: 'Em desenvolvimento', time: 'Projeto pessoal' },
+    ])
+  })
+
+  it('metadados papel, período e time traduzidos em en', () => {
+    expect(en.items.map((item) => ({ papel: item.papel, periodo: item.periodo, time: item.time }))).toEqual([
+      { papel: 'Co-founder and technical lead', periodo: '2026 to today', time: 'AdSalesBrazil' },
+      { papel: 'Creator and solo developer', periodo: '2025 to 2026', time: 'Personal project' },
+      { papel: 'Author', periodo: '2025', time: 'Personal project' },
+      { papel: 'Creator', periodo: 'In development', time: 'Personal project' },
+    ])
   })
 
   it('usa os nomes e selos esperados em pt', () => {
@@ -136,28 +170,31 @@ describe('regras visuais', () => {
 })
 
 /*
- * Task 4, lista editorial. ProjectRow é a linha nova da spec editorial:
- * nome em display gigante, régua fina, metadados em 4 colunas, hover com
- * preview em sobreposição. A task 7 removeu o ProjectCard e a lista virou
- * a única representação de projetos na home.
+ * Task de fixes pós-validação. Papel, período e time são texto de idioma e
+ * moram no dicionário (pt e en em paridade); o conteúdo canônico guarda só
+ * slug, status, url, ano e preview. ProjectRow lê os valores do item do
+ * dicionário que o pai já entrega.
  */
-const METADADOS_ESPERADOS = [
-  { papel: 'Sócio-fundador e responsável técnico', periodo: '2026 até hoje', ano: '2026', time: 'AdSalesBrazil' },
-  { papel: 'Idealizador e desenvolvedor solo', periodo: '2025 a 2026', ano: '2026', time: 'Projeto pessoal' },
-  { papel: 'Autor', periodo: '2025', ano: '2025', time: 'Projeto pessoal' },
-  { papel: 'Idealizador', periodo: 'Em desenvolvimento', ano: '2026', time: 'Projeto pessoal' },
-]
 
-describe('metadados editoriais no conteúdo', () => {
-  it('cada projeto carrega papel, período, ano e time na ordem', () => {
-    projects.forEach((project, i) => {
-      expect(project.papel, `papel do projeto ${i}`).toBe(METADADOS_ESPERADOS[i].papel)
-      expect(project.periodo, `período do projeto ${i}`).toBe(METADADOS_ESPERADOS[i].periodo)
-      expect(project.ano, `ano do projeto ${i}`).toBe(METADADOS_ESPERADOS[i].ano)
-      expect(project.time, `time do projeto ${i}`).toBe(METADADOS_ESPERADOS[i].time)
-    })
+function montarLinhas(dicionario: typeof pt | typeof en = pt) {
+  const root = document.createElement('div')
+  document.body.appendChild(root)
+  const app = createApp({
+    render: () =>
+      projects.map((project, i) =>
+        h(ProjectRow, {
+          project,
+          text: dicionario.items[i],
+          labels: dicionario.meta,
+          verProjeto: dicionario.verProjeto,
+        }),
+      ),
   })
+  app.mount(root)
+  return { root, app }
+}
 
+describe('preview dos projetos no conteúdo', () => {
   it('cada projeto tem um preview de asset próprio existente em app/assets/img', () => {
     const nomes = new Set<string>()
     projects.forEach((project, i) => {
@@ -190,24 +227,6 @@ describe('dicionário projects, labels editoriais', () => {
   })
 })
 
-function montarLinhas() {
-  const root = document.createElement('div')
-  document.body.appendChild(root)
-  const app = createApp({
-    render: () =>
-      projects.map((project, i) =>
-        h(ProjectRow, {
-          project,
-          text: pt.items[i],
-          labels: pt.meta,
-          verProjeto: pt.verProjeto,
-        }),
-      ),
-  })
-  app.mount(root)
-  return { root, app }
-}
-
 function linhasRenderizadas(root: HTMLElement): HTMLElement[] {
   const linhas = [...root.querySelectorAll('[data-testid="project-row"]')]
   expect(linhas, 'esperava 4 linhas renderizadas').toHaveLength(4)
@@ -234,23 +253,53 @@ describe('ProjectRow, lista editorial', () => {
       const dds = [...grid!.querySelectorAll('dd')].map((el) => el.textContent?.trim())
       expect(dts).toEqual(labelsEsperados)
       expect(dds).toEqual([
-        METADADOS_ESPERADOS[i].papel,
-        METADADOS_ESPERADOS[i].periodo,
-        METADADOS_ESPERADOS[i].ano,
-        METADADOS_ESPERADOS[i].time,
+        pt.items[i].papel,
+        pt.items[i].periodo,
+        projects[i].ano,
+        pt.items[i].time,
       ])
     })
     app.unmount()
   })
 
-  it('cada linha tem botão fantasma Ver projeto com seta', () => {
+  it('cada linha traz os metadados traduzidos em en', () => {
+    const { root, app } = montarLinhas(en)
+    const labelsEsperados = [en.meta.papel, en.meta.periodo, en.meta.ano, en.meta.time]
+    linhasRenderizadas(root).forEach((linha, i) => {
+      const grid = linha.querySelector('[data-testid="project-row-meta"]')
+      expect(grid, `grid de metadados ausente na linha ${i}`).toBeTruthy()
+      const dts = [...grid!.querySelectorAll('dt')].map((el) => el.textContent?.trim())
+      const dds = [...grid!.querySelectorAll('dd')].map((el) => el.textContent?.trim())
+      expect(dts).toEqual(labelsEsperados)
+      expect(dds).toEqual([
+        en.items[i].papel,
+        en.items[i].periodo,
+        projects[i].ano,
+        en.items[i].time,
+      ])
+      expect(dds).not.toContain('2026 até hoje')
+      expect(dds).not.toContain('Projeto pessoal')
+    })
+    app.unmount()
+  })
+
+  it('linhas com url têm o botão fantasma Ver projeto com seta', () => {
     const { root, app } = montarLinhas()
     linhasRenderizadas(root).forEach((linha, i) => {
+      if (!projects[i].url) return
       const cta = linha.querySelector('[data-testid="project-row-cta"]')
       expect(cta, `cta ausente na linha ${i}`).toBeTruthy()
       expect(cta!.textContent).toContain('Ver projeto')
       expect(cta!.querySelector('[aria-hidden="true"]'), `seta ausente na linha ${i}`).toBeTruthy()
     })
+    app.unmount()
+  })
+
+  it('linha sem url não renderiza rótulo de ação nenhum, o selo âmbar já comunica', () => {
+    const { root, app } = montarLinhas()
+    const saas = linhasRenderizadas(root)[3]
+    expect(saas.querySelector('[data-testid="project-row-cta"]'), 'cta fantasma no SaaS').toBeNull()
+    expect(saas.textContent).not.toContain(pt.verProjeto)
     app.unmount()
   })
 

@@ -148,7 +148,7 @@ describe('Home — conteúdo das seções', () => {
     )
     const grid = linhas[0]?.querySelector('[data-testid="project-row-meta"]')
     expect(grid?.textContent).toContain(dict.projects.meta.papel)
-    expect(grid?.textContent).toContain(projects[0].papel)
+    expect(grid?.textContent).toContain(dict.projects.items[0].papel)
   })
 
   it('a linha do SaaS mantém o selo âmbar e sem âncora, regra preservada', () => {

@@ -31,7 +31,11 @@ const linkAttrs = computed(() =>
     <StatusBadge v-if="project.status === 'wip'" variant="wip" :label="text.badge" />
     <span class="project-row__topo">
       <h3 class="project-row__nome" data-testid="project-row-name">{{ text.name }}</h3>
-      <span class="project-row__cta" data-testid="project-row-cta">
+      <span
+        v-if="project.url"
+        class="project-row__cta"
+        data-testid="project-row-cta"
+      >
         {{ verProjeto }}
         <span aria-hidden="true" class="project-row__seta">→</span>
       </span>
@@ -48,11 +52,11 @@ const linkAttrs = computed(() =>
     <dl class="project-row__meta" data-testid="project-row-meta">
       <div class="project-row__meta-item">
         <dt>{{ labels.papel }}</dt>
-        <dd>{{ project.papel }}</dd>
+        <dd>{{ text.papel }}</dd>
       </div>
       <div class="project-row__meta-item">
         <dt>{{ labels.periodo }}</dt>
-        <dd>{{ project.periodo }}</dd>
+        <dd>{{ text.periodo }}</dd>
       </div>
       <div class="project-row__meta-item">
         <dt>{{ labels.ano }}</dt>
@@ -60,7 +64,7 @@ const linkAttrs = computed(() =>
       </div>
       <div class="project-row__meta-item">
         <dt>{{ labels.time }}</dt>
-        <dd>{{ project.time }}</dd>
+        <dd>{{ text.time }}</dd>
       </div>
     </dl>
   </component>

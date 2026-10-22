@@ -10,10 +10,6 @@ const heroEl = ref<HTMLElement | null>(null)
 const ctaPrimariaEl = ref<HTMLElement | null>(null)
 const ctaSecundariaEl = ref<HTMLElement | null>(null)
 
-// Nomes proprios de tecnologia, identicos em pt e en; "IA aplicada" e o
-// unico termo traduzivel e o dicionario hero nao e arquivo desta task.
-const CHIPS = ['Kotlin', 'Android', 'Vue.js', 'IA aplicada', 'DevOps']
-
 // O rastro reusa a MESMA foto do hero com tratamentos de filtro CSS,
 // zero bytes novos de rede, decisao aprovada no gate 2.
 const TRATAMENTOS_TRAIL = [
@@ -52,7 +48,7 @@ useMagnetic(ctaSecundariaEl)
         </h1>
         <ul class="hero__chips" data-testid="hero-chips">
           <li
-            v-for="chip in CHIPS"
+            v-for="chip in hero.chips"
             :key="chip"
             class="hero__chip"
             data-testid="hero-chip"
@@ -320,7 +316,7 @@ useMagnetic(ctaSecundariaEl)
   }
 
   .hero__titulo {
-    font-size: clamp(2.75rem, 8.5vw, 8.5rem);
+    font-size: clamp(2.75rem, 11vw, 8.5rem);
   }
 
   .hero__texto {
