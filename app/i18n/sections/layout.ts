@@ -8,6 +8,7 @@ export const pt = {
     contato: 'Contato',
   },
   footer: {
+    wordmark: 'ALEX ALVES',
     copyright: '2026 Alex Alves · construído com Nuxt e publicado no GitHub Pages',
   },
 }
@@ -24,6 +25,7 @@ export const en: LayoutDict = {
     contato: 'Contact',
   },
   footer: {
+    wordmark: 'ALEX ALVES',
     copyright: '2026 Alex Alves · Built with Nuxt and published on GitHub Pages',
   },
 }

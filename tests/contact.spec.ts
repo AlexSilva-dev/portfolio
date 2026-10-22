@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp, effectScope, nextTick, type Ref } from 'vue'
 
@@ -45,6 +47,16 @@ import { dictionaries } from '../app/i18n'
 import { SITE_BASE_URL } from '../app/utils/site'
 import { useCopyEmail } from '../app/composables/useCopyEmail'
 import ContactSection from '../app/components/ContactSection.vue'
+import SiteFooter from '../app/components/SiteFooter.vue'
+
+const fonteContact = readFileSync(
+  join(import.meta.dirname, '..', 'app', 'components', 'ContactSection.vue'),
+  'utf8',
+)
+const fonteFooter = readFileSync(
+  join(import.meta.dirname, '..', 'app', 'components', 'SiteFooter.vue'),
+  'utf8',
+)
 import NotFoundPage from '../app/pages/404.vue'
 import ErrorPage from '../app/error.vue'
 import AppRoot from '../app/app.vue'
@@ -237,7 +249,8 @@ describe('ContactSection', () => {
     await nextTick()
 
     expect(root.textContent).toContain(dictionaries.en.sections.contact.heading)
-    expect(root.textContent).toContain(dictionaries.en.sections.contact.sub)
+    expect(root.textContent).toContain(dictionaries.en.sections.contact.writeDirect)
+    expect(root.textContent).toContain(dictionaries.en.sections.contact.kicker)
     expect(porTestId(root, 'contact-send-email').textContent).toContain(
       dictionaries.en.sections.contact.sendEmail,
     )
@@ -248,6 +261,94 @@ describe('ContactSection', () => {
       dictionaries.en.sections.contact.linkedinLabel,
     )
     app.unmount()
+  })
+
+  it('estrutura do cartão, kicker entre parênteses, título display e linha Ou escreva direto com o email', () => {
+    instalarClipboard()
+    const { root, app } = montar(ContactSection)
+    const contato = dictionaries.pt.sections.contact
+
+    const cartao = porTestId(root, 'contact-card')
+    expect(cartao.textContent).toContain('( ')
+    expect(cartao.textContent).toContain(contato.kicker)
+    expect(porTestId(root, 'contact-heading').textContent).toContain(contato.heading)
+
+    const direto = porTestId(root, 'contact-direct')
+    expect(direto.textContent).toContain(contato.writeDirect)
+    expect(direto.textContent).toContain(EMAIL)
+    app.unmount()
+  })
+
+  it('email em destaque é link mailto sublinhado gigante', () => {
+    instalarClipboard()
+    const { root, app } = montar(ContactSection)
+
+    const email = porTestId(root, 'contact-email') as HTMLAnchorElement
+    expect(email.tagName).toBe('A')
+    expect(email.getAttribute('href')).toBe(`mailto:${EMAIL}`)
+    expect(email.className).toContain('contato__email')
+    app.unmount()
+  })
+
+  it('Enviar email sólido tem seta decorativa e Copiar email fantasma mostra o feedback', async () => {
+    instalarClipboard()
+    const { root, app } = montar(ContactSection)
+
+    const enviar = porTestId(root, 'contact-send-email')
+    const seta = enviar.querySelector('[aria-hidden="true"]')
+    expect(seta).toBeTruthy()
+
+    const copiar = porTestId(root, 'contact-copy-email')
+    expect(copiar.tagName).toBe('BUTTON')
+    expect(root.querySelector('[data-testid="contact-copy-feedback"]')).toBeNull()
+    copiar.click()
+    await flush()
+    expect(porTestId(root, 'contact-copy-feedback')).toBeTruthy()
+    app.unmount()
+  })
+
+  it('canal é email direto, a seção não tem formulário', () => {
+    instalarClipboard()
+    const { root, app } = montar(ContactSection)
+
+    expect(root.querySelector('form')).toBeNull()
+    app.unmount()
+  })
+
+  it('fonte do cartão usa o asset de código, véu navy, tinta e anel de foco claro sobre o fundo escuro', () => {
+    expect(fonteContact).toMatch(
+      /2560x1600-px-code-coding-computer-Computer-screen-Java-1288551-wallhere\.com\.jpg/,
+    )
+    expect(fonteContact).toMatch(/--focus-ring:\s*2px solid var\(--color-accent\)/)
+    expect(fonteContact).toMatch(/background:\s*var\(--color-ink\)/)
+    expect(fonteContact).toMatch(
+      /contato__veu\s*\{[^}]*color-mix\(in srgb, var\(--color-bg\)/,
+    )
+  })
+})
+
+describe('SiteFooter wordmark', () => {
+  it('wordmark ALEX ALVES é decorativo aria-hidden e o copyright legível vem do dicionário', () => {
+    const { root, app } = montar(SiteFooter)
+    const layout = dictionaries.pt.sections.layout
+
+    const wordmark = porTestId(root, 'footer-wordmark')
+    expect(wordmark.getAttribute('aria-hidden')).toBe('true')
+    expect(wordmark.textContent?.trim()).toBe(layout.footer.wordmark)
+
+    const copyright = root.querySelector('[data-testid="site-footer"] p')
+    expect(copyright?.textContent?.trim()).toBe(layout.footer.copyright)
+    app.unmount()
+  })
+
+  it('wordmark ocupa a largura total com clamp de 15vw no arquivo-fonte', () => {
+    expect(fonteFooter).toMatch(/clamp\([^)]*15vw/)
+    expect(fonteFooter).toMatch(/aria-hidden="true"[^>]*data-testid="footer-wordmark"/)
+  })
+
+  it('dicionário layout tem wordmark com paridade pt e en', () => {
+    expect(dictionaries.pt.sections.layout.footer.wordmark).toBe('ALEX ALVES')
+    expect(dictionaries.en.sections.layout.footer.wordmark).toBe('ALEX ALVES')
   })
 })
 
