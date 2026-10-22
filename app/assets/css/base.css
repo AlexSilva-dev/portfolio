@@ -14,8 +14,8 @@ html {
 }
 
 body {
-  background: var(--color-bg);
-  color: var(--color-text);
+  background: var(--color-paper);
+  color: var(--color-ink);
   font-family: var(--font-sans);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
@@ -29,10 +29,11 @@ video {
 }
 
 a {
-  color: var(--color-accent);
+  color: var(--color-accent-deep);
 }
 
-/* Foco de teclado nunca removido, sempre visível em violeta */
+/* Foco de teclado nunca removido, sempre visível em violeta, anel de 2px
+   no tom da área papel por padrão, seções escuras sobrepõem o anel nelas */
 :focus-visible {
   outline: var(--focus-ring);
   outline-offset: 2px;

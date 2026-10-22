@@ -1,9 +1,18 @@
 /*
- * Tokens semânticos do tema escuro (design.md, ADR-4).
- * Violeta extraído do rim light de Minha-foto.jpg (quartil claro, #8B7A9F),
- * único acento do site. Nenhum hex fora deste arquivo.
+ * Tokens semânticos em 2 áreas de cor (design.md, ADR-1).
+ * Área papel, default da página: papel FAFAF8, tinta 111113 e violeta
+ * profundo 756090 (mesma família de matiz do 8B7A9F, escurecido até
+ * passar 4,5 sobre o papel, medido 5,24).
+ * Área escura, seções de impacto: navy herdado com o violeta claro
+ * 8B7A9F extraído do rim light de Minha-foto.jpg (medido 4,85 sobre o
+ * navy). Nenhum hex fora deste arquivo.
  */
 :root {
+  /* Área papel (default) */
+  --color-paper: #FAFAF8;
+  --color-ink: #111113;
+  --color-accent-deep: #756090;
+  /* Área escura */
   --color-bg: #0B1020;
   --color-surface: #151C30;
   --color-text: #E9ECF5;
@@ -14,7 +23,7 @@
   --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-mono: 'JetBrains Mono', 'SFMono-Regular', Consolas, monospace;
   --space-section: clamp(6rem, 8vw, 8rem);
-  --focus-ring: 2px solid var(--color-accent);
+  --focus-ring: 2px solid var(--color-accent-deep);
 }
 
 @media (max-width: 767px) {

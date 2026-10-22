@@ -59,6 +59,43 @@ describe('pares de contraste dos tokens', () => {
   }
 })
 
+describe('pares de contraste da área papel (ADR-1)', () => {
+  const pares = [
+    { fg: 'color-ink', bg: 'color-paper', min: 4.5 },
+    { fg: 'color-accent-deep', bg: 'color-paper', min: 4.5 },
+    { fg: 'color-text', bg: 'color-bg', min: 4.5 },
+    { fg: 'color-accent', bg: 'color-bg', min: 4.5 },
+  ] as const
+
+  for (const { fg, bg, min } of pares) {
+    it(`${fg} contra ${bg} atinge no mínimo ${min}`, () => {
+      const razao = contrastRatio(readToken(fg), readToken(bg))
+      expect(razao).toBeGreaterThanOrEqual(min)
+    })
+  }
+
+  it('declara papel, tinta e violeta profundo nos hex fixados', () => {
+    expect(readToken('color-paper').toUpperCase()).toBe('#FAFAF8')
+    expect(readToken('color-ink').toUpperCase()).toBe('#111113')
+    expect(readToken('color-accent-deep').toUpperCase()).toBe('#756090')
+  })
+})
+
+describe('base da página em papel com tinta (ADR-1)', () => {
+  const basePath = join(import.meta.dirname, '..', 'app', 'assets', 'css', 'base.css')
+
+  it('body usa papel como fundo e tinta como texto', () => {
+    const css = readFileSync(basePath, 'utf-8')
+    expect(css).toMatch(/background:\s*var\(--color-paper\)/)
+    expect(css).toMatch(/color:\s*var\(--color-ink\)/)
+  })
+
+  it('anel de foco mantém 2px e usa o violeta profundo da área papel', () => {
+    const css = readFileSync(tokensPath, 'utf-8')
+    expect(css).toMatch(/--focus-ring\s*:\s*2px solid var\(--color-accent-deep\)/)
+  })
+})
+
 describe('tokens do tema', () => {
   it('declara o accent extraído da foto', () => {
     expect(readToken('color-accent').toUpperCase()).toBe('#8B7A9F')
