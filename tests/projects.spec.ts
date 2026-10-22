@@ -2,7 +2,6 @@ import { existsSync, readFileSync } from 'node:fs'
 import { basename, join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import { createApp, h } from 'vue'
-import ProjectCard from '../app/components/ProjectCard.vue'
 import ProjectRow from '../app/components/ProjectRow.vue'
 import StatusBadge from '../app/components/StatusBadge.vue'
 import { projects } from '../app/content/projects'
@@ -12,24 +11,6 @@ const componentesPath = join(import.meta.dirname, '..', 'app', 'components')
 
 function lerComponente(nome: string): string {
   return readFileSync(join(componentesPath, nome), 'utf-8')
-}
-
-// Monta os 4 cards na ordem do conteúdo estruturado, como a seção de projetos
-// vai fazer ao zipar o array de conteúdo com os textos do dicionário
-function montarCards() {
-  const root = document.createElement('div')
-  document.body.appendChild(root)
-  const app = createApp({
-    render: () => projects.map((project, i) => h(ProjectCard, { project, text: pt.items[i] })),
-  })
-  app.mount(root)
-  return { root, app }
-}
-
-function cardsRenderizados(root: HTMLElement): HTMLElement[] {
-  const cards = [...root.querySelectorAll('[data-testid="project-card"]')]
-  expect(cards, 'esperava 4 cards renderizados').toHaveLength(4)
-  return cards as HTMLElement[]
 }
 
 afterEach(() => {
@@ -126,46 +107,7 @@ describe('dicionário projects', () => {
   })
 })
 
-describe('cards renderizados', () => {
-  it('renderiza os 4 cards na ordem do conteúdo', () => {
-    const { root, app } = montarCards()
-    const nomes = cardsRenderizados(root).map(
-      (card) => card.querySelector('[data-testid="project-card-title"]')?.textContent?.trim(),
-    )
-    expect(nomes).toEqual(pt.items.map((item) => item.name))
-    app.unmount()
-  })
-
-  it('cada card mostra resumo e chips do dicionário', () => {
-    const { root, app } = montarCards()
-    cardsRenderizados(root).forEach((card, i) => {
-      expect(card.querySelector('.project-card__summary')?.textContent?.trim()).toBe(pt.items[i].summary)
-      const chips = [...card.querySelectorAll('.project-card__chip')].map((el) => el.textContent?.trim())
-      expect(chips).toEqual(pt.items[i].chips)
-    })
-    app.unmount()
-  })
-})
-
 describe('selos de status', () => {
-  const casos = [
-    { i: 0, variante: 'status-badge--production', rotulo: 'Produto em produção' },
-    { i: 1, variante: 'status-badge--neutral', rotulo: 'Projeto solo' },
-    { i: 2, variante: 'status-badge--neutral', rotulo: 'Ferramenta de linha de comando' },
-    { i: 3, variante: 'status-badge--wip', rotulo: 'Em desenvolvimento' },
-  ] as const
-
-  it('usa a variante e o texto corretos em cada card', () => {
-    const { root, app } = montarCards()
-    for (const { i, variante, rotulo } of casos) {
-      const badge = cardsRenderizados(root)[i].querySelector('.status-badge')
-      expect(badge, `selo ausente no card ${i}`).toBeTruthy()
-      expect(badge!.classList.contains(variante), `variante errada no card ${i}`).toBe(true)
-      expect(badge!.textContent).toContain(rotulo)
-    }
-    app.unmount()
-  })
-
   it('todo selo tem dot E texto, nunca cor sozinha', () => {
     const root = document.createElement('div')
     document.body.appendChild(root)
@@ -183,36 +125,6 @@ describe('selos de status', () => {
   })
 })
 
-describe('regra de link', () => {
-  it('cards com url viram âncora inteira com target _blank e rel noopener', () => {
-    const { root, app } = montarCards()
-    const cards = cardsRenderizados(root)
-    const hrefs = [0, 1, 2].map((i) => {
-      expect(cards[i].tagName, `card ${i} deveria ser âncora`).toBe('A')
-      return (cards[i] as HTMLAnchorElement).href
-    })
-    expect(hrefs).toEqual([
-      'https://adsalesbrazil.com/',
-      'https://ucatech.com.br/',
-      'https://github.com/AlexSilva-dev/checkallpages',
-    ])
-    for (const i of [0, 1, 2]) {
-      const ancora = cards[i] as HTMLAnchorElement
-      expect(ancora.target).toBe('_blank')
-      expect(ancora.rel).toContain('noopener')
-    }
-    app.unmount()
-  })
-
-  it('card sem url renderiza sem âncora nenhuma', () => {
-    const { root, app } = montarCards()
-    const saas = cardsRenderizados(root)[3]
-    expect(saas.tagName).toBe('ARTICLE')
-    expect(saas.querySelector('a')).toBeNull()
-    app.unmount()
-  })
-})
-
 describe('regras visuais', () => {
   it('selo usa tokens de status e fundo translúcido nas variantes coloridas', () => {
     const css = lerComponente('StatusBadge.vue')
@@ -221,20 +133,13 @@ describe('regras visuais', () => {
     expect(css).toMatch(/color-mix\(in srgb, var\(--color-status-green\)/)
     expect(css).toMatch(/color-mix\(in srgb, var\(--color-status-amber\)/)
   })
-
-  it('card usa só tokens, sem hex cru, com elevação de 2px no hover do card linkado', () => {
-    const css = lerComponente('ProjectCard.vue')
-    expect(css, 'hex cru proibido fora de tokens.css').not.toMatch(/#[0-9A-Fa-f]{3,8}\b/)
-    expect(css).toMatch(/var\(--color-text\)/)
-    expect(css).toMatch(/project-card--link:hover[\s\S]*?translateY\(-2px\)/)
-    expect(css, 'esta task não tem animação').not.toMatch(/animation|@keyframes/)
-  })
 })
 
 /*
  * Task 4, lista editorial. ProjectRow é a linha nova da spec editorial:
  * nome em display gigante, régua fina, metadados em 4 colunas, hover com
- * preview em sobreposição. ProjectCard continua vivo até a task 7.
+ * preview em sobreposição. A task 7 removeu o ProjectCard e a lista virou
+ * a única representação de projetos na home.
  */
 const METADADOS_ESPERADOS = [
   { papel: 'Sócio-fundador e responsável técnico', periodo: '2026 até hoje', ano: '2026', time: 'AdSalesBrazil' },

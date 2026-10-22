@@ -39,8 +39,6 @@ const CHIPS = ['Kotlin', 'Android', 'Vue.js', 'IA aplicada', 'DevOps']
 describe('dicionário hero', () => {
   it('pt tem os textos exatos da ui-spec', () => {
     expect(heroPt.kicker).toBe('Sócio-fundador e responsável técnico na AdSalesBrazil')
-    expect(heroPt.h1).toBe('Engenheiro de Software Full Stack')
-    expect(heroPt.specialties).toBe('Kotlin, Android e Vue.js')
     expect(heroPt.sub).toBe(
       'Há 3 anos levo produto do zero à produção, do app Android ao backend com IA.',
     )
@@ -55,8 +53,6 @@ describe('dicionário hero', () => {
 
   it('en traduz os textos e mantém os números em real sem conversão', () => {
     expect(heroEn.kicker).toBe('Co-founder and technical lead at AdSalesBrazil')
-    expect(heroEn.h1).toBe('Full Stack Software Engineer')
-    expect(heroEn.specialties).toBe('Kotlin, Android and Vue.js')
     expect(heroEn.sub).toBe(
       'For 3 years I have taken product from zero to production, from the Android app to the AI backend.',
     )

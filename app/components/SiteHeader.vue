@@ -8,7 +8,7 @@ const links = computed(() => [
   { href: '#sobre', rotulo: dictionary.value.sections.layout.nav.sobre },
   { href: '#experiencia', rotulo: dictionary.value.sections.layout.nav.experiencia },
   { href: '#projetos', rotulo: dictionary.value.sections.layout.nav.projetos },
-  { href: '#tecnologias', rotulo: dictionary.value.sections.layout.nav.tecnologias },
+  { href: '#skillset', rotulo: dictionary.value.sections.layout.nav.tecnologias },
   { href: '#contato', rotulo: dictionary.value.sections.layout.nav.contato },
 ])
 </script>

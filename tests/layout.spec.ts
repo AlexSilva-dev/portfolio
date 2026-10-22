@@ -60,7 +60,7 @@ describe('dicionário layout', () => {
       sobre: 'Sobre',
       experiencia: 'Experiência',
       projetos: 'Projetos',
-      tecnologias: 'Tecnologias',
+      tecnologias: 'Skillset',
       contato: 'Contato',
     })
   })
@@ -71,7 +71,7 @@ describe('dicionário layout', () => {
       sobre: 'About',
       experiencia: 'Experience',
       projetos: 'Projects',
-      tecnologias: 'Technologies',
+      tecnologias: 'Skillset',
       contato: 'Contact',
     })
   })
@@ -121,11 +121,11 @@ describe('SiteHeader', () => {
     const rotulos = [...raiz.querySelectorAll('.site-header__link')].map(
       (a) => a.textContent?.trim(),
     )
-    expect(rotulos).toEqual(['Sobre', 'Experiência', 'Projetos', 'Tecnologias', 'Contato'])
+    expect(rotulos).toEqual(['Sobre', 'Experiência', 'Projetos', 'Skillset', 'Contato'])
     const hrefs = [...raiz.querySelectorAll('.site-header__link')].map((a) =>
       a.getAttribute('href'),
     )
-    expect(hrefs).toEqual(['#sobre', '#experiencia', '#projetos', '#tecnologias', '#contato'])
+    expect(hrefs).toEqual(['#sobre', '#experiencia', '#projetos', '#skillset', '#contato'])
 
     app.unmount()
   })
@@ -140,7 +140,7 @@ describe('SiteHeader', () => {
     const rotulos = [...raiz.querySelectorAll('.site-header__link')].map(
       (a) => a.textContent?.trim(),
     )
-    expect(rotulos).toEqual(['About', 'Experience', 'Projects', 'Technologies', 'Contact'])
+    expect(rotulos).toEqual(['About', 'Experience', 'Projects', 'Skillset', 'Contact'])
 
     app.unmount()
   })

@@ -4,7 +4,7 @@ export const pt = {
     sobre: 'Sobre',
     experiencia: 'Experiência',
     projetos: 'Projetos',
-    tecnologias: 'Tecnologias',
+    tecnologias: 'Skillset',
     contato: 'Contato',
   },
   footer: {
@@ -21,7 +21,7 @@ export const en: LayoutDict = {
     sobre: 'About',
     experiencia: 'Experience',
     projetos: 'Projects',
-    tecnologias: 'Technologies',
+    tecnologias: 'Skillset',
     contato: 'Contact',
   },
   footer: {

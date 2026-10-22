@@ -1,7 +1,5 @@
 export const pt = {
   kicker: 'Sócio-fundador e responsável técnico na AdSalesBrazil',
-  h1: 'Engenheiro de Software Full Stack',
-  specialties: 'Kotlin, Android e Vue.js',
   sub: 'Há 3 anos levo produto do zero à produção, do app Android ao backend com IA.',
   badge: 'Disponível pra oportunidades',
   stats: [
@@ -20,8 +18,6 @@ export type HeroDict = typeof pt
 
 export const en: HeroDict = {
   kicker: 'Co-founder and technical lead at AdSalesBrazil',
-  h1: 'Full Stack Software Engineer',
-  specialties: 'Kotlin, Android and Vue.js',
   sub: 'For 3 years I have taken product from zero to production, from the Android app to the AI backend.',
   badge: 'Available for opportunities',
   stats: [

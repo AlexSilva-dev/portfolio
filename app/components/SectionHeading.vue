@@ -42,10 +42,13 @@ useReveal(raiz)
   margin-right: 0.5rem;
 }
 
+/* Escala editorial, títulos de seção em display gigante alinhados ao Skillset */
 .section-heading__title {
   color: var(--color-text);
-  font-size: clamp(1.75rem, 3vw, 2.25rem);
-  line-height: 1.2;
+  font-size: clamp(3rem, 8vw, 8rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 0.95;
 }
 
 .section-heading__title .reveal-line {

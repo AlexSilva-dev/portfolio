@@ -50,18 +50,6 @@ const DESCRICOES_SKILLSET_EN = [
   'clean architecture, DDD and TDD in the daily routine',
 ]
 
-async function mountTechGroup(props: {
-  label: string
-  items: string[]
-  core?: boolean
-}): Promise<HTMLElement> {
-  const { default: TechGroup } = await import('../app/components/TechGroup.vue')
-  const container = document.createElement('div')
-  const app = createApp(TechGroup as Component, props)
-  app.mount(container)
-  return container
-}
-
 async function montarSkillset(locale: 'pt' | 'en'): Promise<HTMLElement> {
   const { default: SkillsetSection } = await import('../app/components/SkillsetSection.vue')
   const { locale: localeAtual } = useLocale()
@@ -164,40 +152,6 @@ describe('Skillset — descrições curtas numeradas no dicionário', () => {
       expect(grupo.description).not.toMatch(/[:;+]/)
       expect(grupo.description.trim()).toBe(grupo.description)
     }
-  })
-})
-
-describe('TechGroup (componente)', () => {
-  it('renderiza o heading do grupo e os chips como texto puro, sem ícones', async () => {
-    const el = await mountTechGroup({
-      label: 'Kotlin e Android',
-      core: true,
-      items: ['Kotlin', 'Kotlin Multiplatform', 'Compose'],
-    })
-    expect(el.querySelector('[data-testid="tech-group-label"]')?.textContent).toBe(
-      'Kotlin e Android',
-    )
-    const chips = [...el.querySelectorAll('[data-testid="tech-group-chip"]')]
-    expect(chips.map((c) => c.textContent)).toEqual([
-      'Kotlin',
-      'Kotlin Multiplatform',
-      'Compose',
-    ])
-    expect(el.querySelector('img, svg')).toBeNull()
-  })
-
-  it('aplica a variante core no grupo marcado como core', async () => {
-    const el = await mountTechGroup({ label: 'Backend', core: true, items: ['Java'] })
-    expect(el.querySelector('[data-testid="tech-group"]')?.classList.contains('tech-group--core')).toBe(
-      true,
-    )
-  })
-
-  it('não aplica a variante core no grupo neutro', async () => {
-    const el = await mountTechGroup({ label: 'Práticas', items: ['TDD'] })
-    expect(el.querySelector('[data-testid="tech-group"]')?.classList.contains('tech-group--core')).toBe(
-      false,
-    )
   })
 })
 
