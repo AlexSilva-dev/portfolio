@@ -1,34 +1,42 @@
 <script setup lang="ts">
-import fotoHero from '../assets/img/alex-hero.jpg'
+import alexCut from '../assets/img/alex-cut.png'
+import iconeCss from '../assets/icons/icons8-css-96.png'
+import iconeGithub from '../assets/icons/icons8-github-100.png'
+import iconeHtml from '../assets/icons/icons8-html-96.png'
+import iconeJavascript from '../assets/icons/icons8-javascript-48.png'
+import iconeKotlin from '../assets/icons/icons8-kotlin-96.png'
+import iconeSpring from '../assets/icons/icons8-spring-boot-48.png'
+import iconeVue from '../assets/icons/icons8-vue-js-96.png'
 import { useImageTrail } from '../composables/useImageTrail'
 import { useMagnetic } from '../composables/useMagnetic'
 
 const { dictionary } = useLocale()
 const hero = computed(() => dictionary.value.sections.hero)
 
-const heroEl = ref<HTMLElement | null>(null)
+const fotoEl = ref<HTMLElement | null>(null)
 const ctaPrimariaEl = ref<HTMLElement | null>(null)
 const ctaSecundariaEl = ref<HTMLElement | null>(null)
 
-// O rastro reusa a MESMA foto do hero com tratamentos de filtro CSS,
-// zero bytes novos de rede, decisao aprovada no gate 2.
-const TRATAMENTOS_TRAIL = [
-  'grayscale(1) contrast(1.15)',
-  'sepia(0.5) saturate(1.3)',
-  'hue-rotate(160deg) saturate(0.85) brightness(1.05)',
-  'contrast(1.35) brightness(0.8)',
-  'grayscale(0.55) sepia(0.25) contrast(1.1)',
-  'hue-rotate(-45deg) saturate(1.2) contrast(1.05)',
+// Rastro de icones de tech com fundo transparente, revelado SOMENTE dentro
+// do container da foto, decisao do fix visual aprovada pelo dono.
+const ICONES_TRAIL = [
+  iconeKotlin,
+  iconeVue,
+  iconeSpring,
+  iconeHtml,
+  iconeCss,
+  iconeJavascript,
+  iconeGithub,
 ]
-const itensTrilha = TRATAMENTOS_TRAIL.map((filtro) => ({ src: fotoHero, filtro }))
+const itensTrilha = ICONES_TRAIL.map((src) => ({ src }))
 
-useImageTrail(heroEl, itensTrilha)
+useImageTrail(fotoEl, itensTrilha)
 useMagnetic(ctaPrimariaEl)
 useMagnetic(ctaSecundariaEl)
 </script>
 
 <template>
-  <section id="hero" ref="heroEl" class="hero" data-testid="hero">
+  <section id="hero" class="hero" data-testid="hero">
     <header class="hero__cabecalho">
       <p class="hero__wordmark" data-testid="hero-wordmark">Alex Alves</p>
     </header>
@@ -87,12 +95,12 @@ useMagnetic(ctaSecundariaEl)
           </a>
         </div>
       </div>
-      <figure class="hero__foto">
+      <figure ref="fotoEl" class="hero__foto" data-testid="hero-photo-container">
         <img
-          :src="fotoHero"
+          :src="alexCut"
           :alt="hero.photoAlt"
           width="768"
-          height="960"
+          height="1201"
           decoding="async"
           fetchpriority="high"
           data-testid="hero-photo"
@@ -116,8 +124,7 @@ useMagnetic(ctaSecundariaEl)
   position: relative;
 }
 
-.hero__grade,
-.hero :deep([data-image-trail]) {
+.hero__grade {
   position: relative;
   z-index: 1;
 }
@@ -174,7 +181,7 @@ useMagnetic(ctaSecundariaEl)
 
 .hero__badge {
   align-items: center;
-  border: 1px solid color-mix(in srgb, var(--color-status-green) 45%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-status-green) 75%, transparent);
   display: flex;
   font-size: 0.8125rem;
   gap: 0.5rem;
@@ -214,10 +221,16 @@ useMagnetic(ctaSecundariaEl)
 }
 
 .hero__chip {
-  border: 1px solid color-mix(in srgb, var(--color-ink) 40%, transparent);
+  border: 1px solid var(--color-ink);
   font-family: var(--font-mono);
   font-size: 0.8125rem;
   padding: 0.375rem 0.875rem;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.hero__chip:hover {
+  border-color: var(--color-accent-deep);
+  color: var(--color-accent-deep);
 }
 
 .hero__sub {
@@ -236,7 +249,7 @@ useMagnetic(ctaSecundariaEl)
 }
 
 .hero__stat {
-  border-top: 1px solid color-mix(in srgb, var(--color-ink) 30%, transparent);
+  border-top: 1px solid var(--color-accent);
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
@@ -244,7 +257,7 @@ useMagnetic(ctaSecundariaEl)
 }
 
 .hero__stat-valor {
-  color: var(--color-ink);
+  color: var(--color-accent-deep);
   font-family: var(--font-mono);
   font-size: 1.25rem;
 }
@@ -289,23 +302,15 @@ useMagnetic(ctaSecundariaEl)
   height: 100%;
   margin: 0;
   min-height: 0;
+  position: relative;
 }
 
 .hero__foto img {
   display: block;
   filter: grayscale(1);
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   width: 100%;
-}
-
-.hero :deep([data-image-trail] img) {
-  aspect-ratio: 4 / 5;
-  border: 1px solid color-mix(in srgb, var(--color-accent-deep) 35%, transparent);
-  border-radius: 0.5rem;
-  box-shadow: 0 12px 32px color-mix(in srgb, var(--color-ink) 25%, transparent);
-  object-fit: cover;
-  width: 7.5rem;
 }
 
 /* Altura baixa de desktop e notebooks: display e respiros compactados pra

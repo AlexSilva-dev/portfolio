@@ -17,17 +17,22 @@ export interface ImageTrailOptions {
   duracaoEntrada?: number
   /** Segundos da saida da foto. */
   duracaoSaida?: number
+  /** Largura em px de cada imagem do rastro (icones, faixa 80 a 120). */
+  larguraPx?: number
 }
 
 const PADRAO: Required<ImageTrailOptions> = {
   throttleMs: 90,
   duracaoEntrada: 0.4,
   duracaoSaida: 0.6,
+  larguraPx: 100,
 }
 
 /**
- * Rastro de fotos que surgem e desaparecem atras do cursor sobre a area do
- * container, so em desktop com ponteiro fino e cortado com movimento reduzido.
+ * Rastro de imagens (icones de tech com fundo transparente) que surgem e
+ * desaparecem atras do cursor sobre a area do container passado, so em
+ * desktop com ponteiro fino e cortado com movimento reduzido. Fora do
+ * container nada aparece, pois o listener de ponteiro nasce nele.
  * As imagens sao criadas a partir da config recebida, decorative, aria-hidden.
  * Cleanup pelo padrao de contexto, revert e remocao do wrapper em onUnmounted.
  */
@@ -65,6 +70,7 @@ export function useImageTrail(
       img.draggable = false
       img.style.position = 'absolute'
       img.style.opacity = '0'
+      img.style.width = `${config.larguraPx}px`
       if (item.filtro) img.style.filter = item.filtro
       wrapper.appendChild(img)
       return img

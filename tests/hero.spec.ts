@@ -1,7 +1,8 @@
 import { join } from 'node:path'
-import { readFileSync } from 'node:fs'
+import { readFileSync, statSync } from 'node:fs'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h } from 'vue'
+import { gsap } from 'gsap'
 
 const { setLocaleMock } = vi.hoisted(() => ({ setLocaleMock: vi.fn() }))
 vi.mock('../app/composables/useLocale', async () => {
@@ -189,12 +190,13 @@ describe('HeroSection', () => {
     expect(secundario.textContent?.trim()).toBe('Ver experiência')
   })
 
-  it('foto tem dimensões 768x960 declaradas e alt descritivo em pt', () => {
+  it('foto usa o recorte sem fundo 768x1201 com alt descritivo em pt', () => {
     const root = montar('pt')
     const foto = root.querySelector('[data-testid="hero-photo"]') as HTMLImageElement
     expect(foto).not.toBeNull()
+    expect(foto.getAttribute('src')).toMatch(/alex-cut\.png$/)
     expect(foto.getAttribute('width')).toBe('768')
-    expect(foto.getAttribute('height')).toBe('960')
+    expect(foto.getAttribute('height')).toBe('1201')
     expect(foto.getAttribute('alt')?.length ?? 0).toBeGreaterThan(10)
     expect(foto.getAttribute('alt')).toContain('Alex')
   })
@@ -229,24 +231,37 @@ describe('HeroSection composição editorial (CSS)', () => {
     expect(linha).toMatch(/display:\s*block/)
   })
 
-  it('foto em escala de cinza cobrindo a meia tela com altura da dobra', () => {
+  it('recorte do dono flutua em escala de cinza cobrindo a meia tela com altura da dobra', () => {
     expect(css).toMatch(/filter:\s*grayscale\(1\)/)
-    expect(css).toMatch(/object-fit:\s*cover/)
+    expect(css).toMatch(/object-fit:\s*contain/)
     expect(css).toMatch(/min-height:\s*100dvh/)
   })
 
-  it('chips em caixa com borda de 1px e container que quebra em 2 fileiras', () => {
+  it('chips com borda tinta e hover com borda e texto em violeta profundo', () => {
     const chip = css.match(/\.hero__chip\s*\{([^}]*)\}/)?.[1] ?? ''
-    expect(chip).toMatch(/border:\s*1px solid/)
+    expect(chip).toMatch(/border:\s*1px solid var\(--color-ink\)/)
     const chips = css.match(/\.hero__chips\s*\{([^}]*)\}/)?.[1] ?? ''
     expect(chips).toMatch(/flex-wrap:\s*wrap/)
+    const hover = css.match(/\.hero__chip:hover\s*\{([^}]*)\}/)?.[1] ?? ''
+    expect(hover).toMatch(/border-color:\s*var\(--color-accent-deep\)/)
+    expect(hover).toMatch(/color:\s*var\(--color-accent-deep\)/)
   })
 
-  it('números em linha mono com réguas finas de 1px', () => {
+  it('kicker em violeta profundo e selo verde com borda definida', () => {
+    const kicker = css.match(/\.hero__kicker\s*\{([^}]*)\}/)?.[1] ?? ''
+    expect(kicker).toMatch(/color:\s*var\(--color-accent-deep\)/)
+    const badge = css.match(/\.hero__badge\s*\{([^}]*)\}/)?.[1] ?? ''
+    expect(badge).toMatch(
+      /color-mix\(in srgb,\s*var\(--color-status-green\)\s*75%,\s*transparent\)/,
+    )
+  })
+
+  it('números em violeta profundo com régua accent e fonte mono', () => {
     const stat = css.match(/\.hero__stat\s*\{([^}]*)\}/)?.[1] ?? ''
-    expect(stat).toMatch(/border-top:\s*1px solid/)
+    expect(stat).toMatch(/border-top:\s*1px solid var\(--color-accent\)/)
     const valor = css.match(/\.hero__stat-valor\s*\{([^}]*)\}/)?.[1] ?? ''
     expect(valor).toMatch(/font-family:\s*var\(--font-mono\)/)
+    expect(valor).toMatch(/color:\s*var\(--color-accent-deep\)/)
   })
 
   it('CTA primário sólido tinta e secundário fantasma', () => {
@@ -275,5 +290,136 @@ describe('HeroSection composição editorial (CSS)', () => {
     const tamanho = bloco.match(/\.hero__titulo\s*\{([^}]*)\}/)?.[1] ?? ''
     expect(tamanho).toMatch(/font-size:\s*clamp\([^,]+,\s*1[123]vw,\s*[^)]+\)/)
     expect(tamanho).not.toMatch(/8\.5vw/)
+  })
+
+  it('tratamentos CSS da foto antiga no rastro morreram', () => {
+    expect(css).not.toMatch(/hue-rotate|sepia/)
+    expect(css).not.toMatch(/aspect-ratio:\s*4\s*\/\s*5/)
+    expect(css).not.toMatch(/data-image-trail/)
+    expect(css).not.toContain('alex-hero')
+  })
+})
+
+describe('HeroSection recorte e rastro de ícones', () => {
+  const ASSINATURA_PNG = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])
+
+  class FakeMediaQueryList {
+    matches = false
+    private listeners = new Set<() => void>()
+
+    addEventListener(_type: string, listener: () => void) {
+      this.listeners.add(listener)
+    }
+
+    removeEventListener(_type: string, listener: () => void) {
+      this.listeners.delete(listener)
+    }
+  }
+
+  function stubMatchMedia(ponteiroFino: boolean, movimentoReduzido: boolean) {
+    const criar = (query: string) => {
+      const lista = new FakeMediaQueryList()
+      lista.matches = query.includes('pointer') ? ponteiroFino : movimentoReduzido
+      return lista
+    }
+    vi.stubGlobal('matchMedia', vi.fn((query: string) => criar(query)))
+  }
+
+  function montarComRastro() {
+    stubMatchMedia(true, false)
+    const { locale: localeRef } = useLocale()
+    localeRef.value = 'pt'
+    setLocaleMock.mockClear()
+    const root = document.createElement('div')
+    document.body.appendChild(root)
+    const app = createApp(HeroSection)
+    app.mount(root)
+    return root
+  }
+
+  function moverPonteiro(elemento: Element, x: number, y: number) {
+    elemento.dispatchEvent(new MouseEvent('pointermove', { clientX: x, clientY: y }))
+  }
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    document.body.innerHTML = ''
+  })
+
+  it('asset alex-cut.png existe, é PNG com canal alfa e dimensões 768x1201', () => {
+    const caminho = join(import.meta.dirname, '..', 'app', 'assets', 'img', 'alex-cut.png')
+    const bytes = readFileSync(caminho)
+    expect(bytes.subarray(0, 8)).toEqual(ASSINATURA_PNG)
+    expect([4, 6]).toContain(bytes[25])
+    expect(bytes.readUInt32BE(16)).toBe(768)
+    expect(bytes.readUInt32BE(20)).toBe(1201)
+  })
+
+  it('script do processo do recorte está commitado e executável', () => {
+    const caminho = join(import.meta.dirname, '..', 'scripts', 'process-cutout.sh')
+    const conteudo = readFileSync(caminho, 'utf-8')
+    expect(conteudo).toContain('rembg')
+    expect(conteudo).toContain('Minha-foto.jpg')
+    expect(statSync(caminho).mode & 0o111).not.toBe(0)
+  })
+
+  it('rastro usa os 7 ícones de tech e nunca a foto do dono', () => {
+    const root = montarComRastro()
+    const imagens = [...root.querySelectorAll('[data-image-trail] img')]
+    expect(imagens).toHaveLength(7)
+    const nomes = imagens.map((img) => img.getAttribute('src') ?? '')
+    expect(nomes.some((src) => src.includes('alex'))).toBe(false)
+    for (const icone of [
+      'icons8-kotlin-96.png',
+      'icons8-vue-js-96.png',
+      'icons8-spring-boot-48.png',
+      'icons8-html-96.png',
+      'icons8-css-96.png',
+      'icons8-javascript-48.png',
+      'icons8-github-100.png',
+    ]) {
+      expect(nomes.some((src) => src.includes(icone))).toBe(true)
+    }
+  })
+
+  it('rastro nasce dentro do container da foto e só vale nela', () => {
+    const root = montarComRastro()
+    const container = root.querySelector('[data-testid="hero-photo-container"]')
+    expect(container).not.toBeNull()
+    const wrapper = container?.querySelector('[data-image-trail]')
+    expect(wrapper).not.toBeNull()
+    expect(wrapper?.parentElement).toBe(container)
+    expect(root.querySelectorAll('[data-image-trail]')).toHaveLength(1)
+
+    // ponteiro fora do container, sobre o título, nao revela nada
+    const titulo = root.querySelector('[data-testid="hero-title"]')
+    moverPonteiro(titulo!, 10, 10)
+    const imagens = [...(wrapper?.querySelectorAll('img') ?? [])]
+    for (const img of imagens) {
+      expect(gsap.getTweensOf(img)).toHaveLength(0)
+    }
+
+    // ponteiro dentro do container revela o primeiro icone
+    moverPonteiro(container!, 50, 60)
+    expect(gsap.getTweensOf(imagens[0]).length).toBeGreaterThanOrEqual(1)
+  })
+
+  it('ícones do rastro medem 100px, dentro da faixa de 80 a 120px', () => {
+    const root = montarComRastro()
+    const container = root.querySelector('[data-testid="hero-photo-container"]')!
+    const imagens = [...container.querySelectorAll('[data-image-trail] img')]
+    moverPonteiro(container, 40, 40)
+    const largura = Number.parseFloat(imagens[0].style.width)
+    expect(largura).toBeGreaterThanOrEqual(80)
+    expect(largura).toBeLessThanOrEqual(120)
+  })
+
+  it('CSS ancora o rastro no container da foto, sem estilizar imagens dele', () => {
+    const css = readFileSync(
+      join(import.meta.dirname, '..', 'app', 'components', 'HeroSection.vue'),
+      'utf-8',
+    )
+    const foto = css.match(/\.hero__foto\s*\{([^}]*)\}/)?.[1] ?? ''
+    expect(foto).toMatch(/position:\s*relative/)
   })
 })
