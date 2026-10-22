@@ -12,9 +12,16 @@ const altFoto = computed(() => dictionary.value.sections.hero.photoAlt)
 const ROTULOS = { pt: 'TRAJETÓRIA', en: 'TRAJECTORY' } as const
 const rotulo = computed(() => ROTULOS[locale.value] ?? ROTULOS.pt)
 
+// Trechos de resultado que acendem em violeta profundo, por idioma.
 const DESTAQUES = {
-  pt: 'o primeiro da minha família',
-  en: 'the first in my family',
+  pt: [
+    'cortei a inadimplência de 18% pra 7,5%',
+    'coloquei IA pra resolver 80% do atendimento',
+  ],
+  en: [
+    'cut delinquency from 18% to 7.5%',
+    'put AI to work resolving 80% of support',
+  ],
 } as const
 const destaque = computed(() => DESTAQUES[locale.value] ?? DESTAQUES.pt)
 
@@ -67,7 +74,7 @@ useTextFill(textoEl, {
 }
 
 .intro__rotulo {
-  color: color-mix(in srgb, var(--color-ink) 60%, var(--color-paper));
+  color: var(--color-accent-deep);
   font-family: var(--font-mono);
   font-size: 0.75rem;
   letter-spacing: 0.2em;

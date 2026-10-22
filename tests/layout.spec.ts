@@ -1,4 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { createApp, nextTick } from 'vue'
 
 const h = vi.hoisted(() => ({
@@ -158,6 +160,24 @@ describe('SiteHeader', () => {
     expect(nav?.getAttribute('aria-label')).toBe('Main navigation')
 
     app.unmount()
+  })
+})
+
+describe('SiteHeader (CSS editorial)', () => {
+  const fonte = readFileSync(
+    join(import.meta.dirname, '..', 'app', 'components', 'SiteHeader.vue'),
+    'utf-8',
+  )
+
+  it('links da nav em tinta plena com hover em violeta profundo', () => {
+    const link = fonte.match(/\.site-header__link\s*\{([^}]*)\}/)?.[1] ?? ''
+    expect(link).toContain('color: var(--color-ink)')
+    const hover = fonte.match(/\.site-header__link:hover\s*\{([^}]*)\}/)?.[1] ?? ''
+    expect(hover).toContain('color: var(--color-accent-deep)')
+  })
+
+  it('nenhum hex cru no componente, tudo via token', () => {
+    expect(fonte).not.toMatch(/#[0-9a-fA-F]{3,8}\b/)
   })
 })
 

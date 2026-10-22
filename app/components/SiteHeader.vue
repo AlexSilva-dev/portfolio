@@ -44,14 +44,14 @@ const links = computed(() => [
 }
 
 .site-header__link {
-  color: var(--color-text-muted);
+  color: var(--color-ink);
   font-size: 0.9375rem;
   text-decoration: none;
   transition: color 0.15s ease;
 }
 
 .site-header__link:hover {
-  color: var(--color-accent);
+  color: var(--color-accent-deep);
 }
 
 /* Nav some no mobile, uma página onde o scroll é a navegação */

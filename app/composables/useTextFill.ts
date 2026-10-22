@@ -21,8 +21,8 @@ export interface Palavra {
 export interface OpcoesUseTextFill {
   /** Fonte viva do texto, relida a cada reconstrução de spans. */
   texto: () => string
-  /** Trecho do texto que acende em violeta profundo. */
-  destaque?: () => string | undefined
+  /** Trecho ou trechos do texto que acendem em violeta profundo. */
+  destaque?: () => string | string[] | undefined
 }
 
 /**
@@ -40,21 +40,26 @@ export function dividirEmPalavras(texto: string): Palavra[] {
 }
 
 /**
- * Índices das palavras que intersectam o trecho de destaque. Trecho vazio
- * ou ausente do texto não marca nada.
+ * Índices das palavras que intersectam os trechos de destaque. Trecho vazio
+ * ou ausente do texto não marca nada. Aceita um trecho único ou uma lista,
+ * marcando a união dos índices.
  */
-export function indicesDoDestaque(texto: string, destaque: string): Set<number> {
+export function indicesDoDestaque(texto: string, destaques: string | string[]): Set<number> {
   const indices = new Set<number>()
-  if (!destaque) return indices
+  const trechos = Array.isArray(destaques) ? destaques : [destaques]
 
-  const inicioTrecho = texto.indexOf(destaque)
-  if (inicioTrecho < 0) return indices
+  trechos.forEach((destaque) => {
+    if (!destaque) return
 
-  const fimTrecho = inicioTrecho + destaque.length
-  dividirEmPalavras(texto).forEach((palavra, indice) => {
-    if (palavra.fim > inicioTrecho && palavra.inicio < fimTrecho) {
-      indices.add(indice)
-    }
+    const inicioTrecho = texto.indexOf(destaque)
+    if (inicioTrecho < 0) return
+
+    const fimTrecho = inicioTrecho + destaque.length
+    dividirEmPalavras(texto).forEach((palavra, indice) => {
+      if (palavra.fim > inicioTrecho && palavra.inicio < fimTrecho) {
+        indices.add(indice)
+      }
+    })
   })
   return indices
 }

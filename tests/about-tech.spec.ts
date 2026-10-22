@@ -20,17 +20,17 @@ vi.mock('../app/composables/useLocale', async () => {
 import { getDictionary } from '../app/i18n'
 import { useLocale } from '../app/composables/useLocale'
 
-const TEXTO_ORIGEM_PT =
-  'Comecei a programar ainda cedo, construindo jogos e bots sozinho em casa, muito antes de qualquer curso. Fui o primeiro da minha família a concluir o ensino médio e transformei essa curiosidade em profissão.'
+const TEXTO_JORNADA_PT =
+  'Em três anos, saí do estágio pra referência técnica de um ERP em produção, cortei a inadimplência de 18% pra 7,5% recuperando R$ 15 mil por mês e coloquei IA pra resolver 80% do atendimento. Hoje sou sócio-fundador e responsável técnico da AdSalesBrazil, levando produto do zero à produção, do app Android ao backend.'
 
-const TEXTO_PRESENTE_PT =
-  'Hoje sou sócio-fundador e responsável técnico da AdSalesBrazil, onde levo IA do experimento à produção. No caminho, reduzi inadimplência de 18% pra 7,5% num ERP, automatizei atendimento com IA e construí um app educacional inteiro em Kotlin Multiplatform sozinho. Gosto de problema de negócio de verdade, com métrica pra provar o resultado.'
+const TEXTO_ORIGEM_PT =
+  'Comecei sozinho, construindo jogos e bots em casa muito antes de qualquer curso. Fui o primeiro da minha família a concluir o ensino médio e transformei essa curiosidade em profissão. De lá pra cá, foi entrega sobre entrega, do ERP ao CRM com IA homologada pela Meta.'
+
+const TEXTO_JORNADA_EN =
+  'In three years, I went from intern to the technical reference of an ERP in production, cut delinquency from 18% to 7.5% recovering R$ 15 thousand a month, and put AI to work resolving 80% of support. Today I am co-founder and technical lead at AdSalesBrazil, taking product from zero to production, from the Android app to the backend.'
 
 const TEXTO_ORIGEM_EN =
-  'I started programming early, building games and bots on my own at home, long before any course. I was the first in my family to finish high school and turned that curiosity into a profession.'
-
-const TEXTO_PRESENTE_EN =
-  'Today I am a founding partner and the technical lead at AdSalesBrazil, where I take AI from experiment to production. Along the way, I cut delinquency from 18% to 7.5% in an ERP, automated customer service with AI and built an entire educational app in Kotlin Multiplatform on my own. I like real business problems, with a metric to prove the result.'
+  'I started alone, building games and bots at home long before any course. I was the first in my family to finish high school and turned that curiosity into a profession. Since then, it has been delivery after delivery, from the ERP to the AI CRM homologated by Meta.'
 
 const DESCRICOES_SKILLSET_PT = [
   'apps multiplataforma da modelagem ao deploy',
@@ -62,13 +62,13 @@ async function montarSkillset(locale: 'pt' | 'en'): Promise<HTMLElement> {
 }
 
 describe('Sobre — conteúdo narrativo', () => {
-  it('parágrafo de origem conta o início cedo com jogos e bots e o primeiro da família no ensino médio', () => {
+  it('parágrafo de jornada traz a trajetória de 3 anos com as métricas de resultado', () => {
     expect(aboutPt.paragraphs).toHaveLength(2)
-    expect(aboutPt.paragraphs[0]).toBe(TEXTO_ORIGEM_PT)
+    expect(aboutPt.paragraphs[0]).toBe(TEXTO_JORNADA_PT)
   })
 
-  it('parágrafo do presente traz o cargo, a inadimplência reduzida, o atendimento por IA e o app multiplataforma', () => {
-    expect(aboutPt.paragraphs[1]).toBe(TEXTO_PRESENTE_PT)
+  it('parágrafo de origem conta o início cedo com jogos e bots e a entrega contínua até o CRM da Meta', () => {
+    expect(aboutPt.paragraphs[1]).toBe(TEXTO_ORIGEM_PT)
   })
 
   it('usa título Sobre mim e kicker De onde eu venho', () => {
@@ -78,10 +78,17 @@ describe('Sobre — conteúdo narrativo', () => {
 
   it('tradução en espelha os 2 parágrafos um a um', () => {
     expect(aboutEn.paragraphs).toHaveLength(2)
-    expect(aboutEn.paragraphs[0]).toBe(TEXTO_ORIGEM_EN)
-    expect(aboutEn.paragraphs[1]).toBe(TEXTO_PRESENTE_EN)
+    expect(aboutEn.paragraphs[0]).toBe(TEXTO_JORNADA_EN)
+    expect(aboutEn.paragraphs[1]).toBe(TEXTO_ORIGEM_EN)
     expect(aboutEn.heading).toBe('About me')
     expect(aboutEn.kicker).toBe('Where I come from')
+  })
+
+  it('nenhum parágrafo usa dois-pontos, ponto e vírgula ou sinal de mais', () => {
+    for (const paragrafo of [...aboutPt.paragraphs, ...aboutEn.paragraphs]) {
+      expect(paragrafo).not.toMatch(/[:;+]/)
+      expect(paragrafo.trim()).toBe(paragrafo)
+    }
   })
 })
 

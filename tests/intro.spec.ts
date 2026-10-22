@@ -149,11 +149,19 @@ describe('dividirEmPalavras', () => {
 })
 
 describe('indicesDoDestaque', () => {
-  const TRECHO = 'o primeiro da minha família'
+  const TRECHO = 'cortei a inadimplência de 18% pra 7,5%'
+  const TRECHO_2 = 'coloquei IA pra resolver 80% do atendimento'
 
   it('marca os índices das palavras dentro do trecho de destaque', () => {
     const indices = indicesDoDestaque(TEXTO_PT, TRECHO)
-    expect([...indices]).toEqual([18, 19, 20, 21, 22])
+    expect([...indices]).toEqual([14, 15, 16, 17, 18, 19, 20])
+  })
+
+  it('aceita lista de trechos e marca a união dos índices', () => {
+    const indices = indicesDoDestaque(TEXTO_PT, [TRECHO, TRECHO_2])
+    expect([...indices]).toEqual([
+      14, 15, 16, 17, 18, 19, 20, 28, 29, 30, 31, 32, 33, 34,
+    ])
   })
 
   it('trecho ausente do texto não marca nada', () => {
@@ -162,6 +170,7 @@ describe('indicesDoDestaque', () => {
 
   it('trecho vazio não marca nada', () => {
     expect(indicesDoDestaque(TEXTO_PT, '')).toEqual(new Set())
+    expect(indicesDoDestaque(TEXTO_PT, [''])).toEqual(new Set())
   })
 })
 
@@ -232,6 +241,70 @@ describe('SectionIntro — rótulo editorial e polaroid', () => {
   })
 })
 
+describe('SectionIntro — destaque violeta por idioma', () => {
+  it('acende as palavras dos trechos de resultado em pt', () => {
+    stubMatchMedia(true)
+    vi.spyOn(gsap, 'fromTo').mockImplementation(() => undefined as never)
+    const raiz = montarSectionIntro('pt')
+    const destacadas = [...raiz.querySelectorAll('.intro__palavra--destaque')]
+    expect(destacadas.map((s) => s.textContent)).toEqual([
+      'cortei',
+      'a',
+      'inadimplência',
+      'de',
+      '18%',
+      'pra',
+      '7,5%',
+      'coloquei',
+      'IA',
+      'pra',
+      'resolver',
+      '80%',
+      'do',
+      'atendimento.',
+    ])
+  })
+
+  it('acende as palavras dos trechos de resultado em en', () => {
+    stubMatchMedia(true)
+    vi.spyOn(gsap, 'fromTo').mockImplementation(() => undefined as never)
+    const raiz = montarSectionIntro('en')
+    const destacadas = [...raiz.querySelectorAll('.intro__palavra--destaque')]
+    expect(destacadas.map((s) => s.textContent)).toEqual([
+      'cut',
+      'delinquency',
+      'from',
+      '18%',
+      'to',
+      '7.5%',
+      'put',
+      'AI',
+      'to',
+      'work',
+      'resolving',
+      '80%',
+      'of',
+      'support.',
+    ])
+  })
+})
+
+describe('SectionIntro — CSS editorial', () => {
+  const fonte = readFileSync(
+    join(import.meta.dirname, '..', 'app', 'components', 'SectionIntro.vue'),
+    'utf-8',
+  )
+
+  it('rótulo editorial entre parênteses acende em violeta profundo', () => {
+    const regra = fonte.match(/\.intro__rotulo\s*\{([^}]*)\}/)?.[1] ?? ''
+    expect(regra).toContain('color: var(--color-accent-deep)')
+  })
+
+  it('nenhum hex cru no componente, tudo via token', () => {
+    expect(fonte).not.toMatch(/#[0-9a-fA-F]{3,8}\b/)
+  })
+})
+
 describe('useTextFill no desktop', () => {
   function stubDesktop() {
     stubMatchMedia(true)
@@ -249,17 +322,29 @@ describe('useTextFill no desktop', () => {
     expect(fromToSpy).toHaveBeenCalledTimes(1)
   })
 
-  it('a span do trecho de destaque ganha a classe violeta', () => {
+  it('a span dos trechos de destaque ganha a classe violeta', () => {
     stubDesktop()
-    const { raiz } = montarHospedeiroUseTextFill(TEXTO_PT, 'o primeiro da minha família')
+    const { raiz } = montarHospedeiroUseTextFill(TEXTO_PT, [
+      'cortei a inadimplência de 18% pra 7,5%',
+      'coloquei IA pra resolver 80% do atendimento',
+    ])
 
     const destacadas = [...raiz.querySelectorAll('.intro__palavra--destaque')]
     expect(destacadas.map((s) => s.textContent)).toEqual([
-      'o',
-      'primeiro',
-      'da',
-      'minha',
-      'família',
+      'cortei',
+      'a',
+      'inadimplência',
+      'de',
+      '18%',
+      'pra',
+      '7,5%',
+      'coloquei',
+      'IA',
+      'pra',
+      'resolver',
+      '80%',
+      'do',
+      'atendimento.',
     ])
   })
 
@@ -446,7 +531,7 @@ describe('useTextFill — troca de texto e movimento reduzido', () => {
     await nextTick()
 
     const primeira = raiz.querySelector('.intro__palavra')?.textContent
-    expect(primeira).toBe('I')
+    expect(primeira).toBe('In')
     expect(normalizar(raiz.textContent)).toBe(TEXTO_EN)
   })
 
