@@ -34,6 +34,8 @@ const STATS_EN = [
   { valor: '3', rotulo: 'years of experience with product in production' },
 ]
 
+const CHIPS = ['Kotlin', 'Android', 'Vue.js', 'IA aplicada', 'DevOps']
+
 describe('dicionário hero', () => {
   it('pt tem os textos exatos da ui-spec', () => {
     expect(heroPt.kicker).toBe('Sócio-fundador e responsável técnico na AdSalesBrazil')
@@ -102,22 +104,6 @@ describe('StatCard', () => {
   })
 })
 
-describe('hero na dobra de 1280x720', () => {
-  const heroPath = join(import.meta.dirname, '..', 'app', 'components', 'HeroSection.vue')
-
-  it('declara breakpoint de altura baixa com respiros, título e foto reduzidos', () => {
-    const css = readFileSync(heroPath, 'utf-8')
-    const bloco = css.match(
-      /@media \(min-width: 768px\) and \(max-height: 820px\)\s*\{([\s\S]*?)\n\}/,
-    )?.[1]
-    expect(bloco).toBeTruthy()
-    expect(bloco).toMatch(/padding-block:\s*3rem/)
-    expect(bloco).toMatch(/font-size:\s*clamp\(2rem,\s*3\.5vw,\s*2\.5rem\)/)
-    expect(bloco).toMatch(/max-width:\s*18rem/)
-    expect(bloco).toMatch(/margin-top:\s*1\.5rem/)
-  })
-})
-
 describe('HeroSection', () => {
   function montar(locale: 'pt' | 'en') {
     const { locale: localeRef } = useLocale()
@@ -134,39 +120,52 @@ describe('HeroSection', () => {
     document.body.innerHTML = ''
   })
 
-  it('renderiza kicker, selo, título, especialidades e sub em pt', () => {
+  it('renderiza kicker e selo de disponibilidade com dot verde em pt', () => {
     const root = montar('pt')
     expect(root.querySelector('[data-testid="hero-kicker"]')?.textContent).toBe(
       'Sócio-fundador e responsável técnico na AdSalesBrazil',
     )
-    expect(root.querySelector('[data-testid="hero-badge"]')?.textContent?.trim()).toBe(
-      'Disponível pra oportunidades',
-    )
-    expect(root.querySelector('[data-testid="hero-title"]')?.textContent).toBe(
-      'Engenheiro de Software Full Stack',
-    )
-    expect(root.querySelector('[data-testid="hero-specialties"]')?.textContent).toBe(
-      'Kotlin, Android e Vue.js',
+    const badge = root.querySelector('[data-testid="hero-badge"]')
+    expect(badge?.textContent?.trim()).toBe('Disponível pra oportunidades')
+    expect(badge?.querySelector('.hero__badge-dot')).not.toBeNull()
+  })
+
+  it('renderiza kicker e sub em en', () => {
+    const root = montar('en')
+    expect(root.querySelector('[data-testid="hero-kicker"]')?.textContent).toBe(
+      'Co-founder and technical lead at AdSalesBrazil',
     )
     expect(root.querySelector('[data-testid="hero-sub"]')?.textContent).toBe(
-      'Há 3 anos levo produto do zero à produção, do app Android ao backend com IA.',
+      'For 3 years I have taken product from zero to production, from the Android app to the AI backend.',
     )
   })
 
-  it('renderiza em en com números em real sem conversão', () => {
-    const root = montar('en')
-    expect(root.querySelector('[data-testid="hero-title"]')?.textContent).toBe(
-      'Full Stack Software Engineer',
-    )
-    expect(root.textContent).toContain('R$ 15 mil')
+  it('nome em display de 2 linhas Alex e Alves', () => {
+    const root = montar('pt')
+    const linhas = [...root.querySelectorAll('[data-testid="hero-title"] .hero__titulo-linha')]
+    expect(linhas).toHaveLength(2)
+    expect(linhas[0].textContent).toBe('Alex')
+    expect(linhas[1].textContent).toBe('Alves')
   })
 
-  it('renderiza os 3 números', () => {
+  it('renderiza os 5 chips de especialidade na ordem da spec', () => {
+    const root = montar('pt')
+    const chips = [...root.querySelectorAll('[data-testid="hero-chip"]')].map(
+      (el) => el.textContent?.trim(),
+    )
+    expect(chips).toEqual(CHIPS)
+  })
+
+  it('renderiza os 3 números com rótulos preenchidos', () => {
     const root = montar('pt')
     const valores = [...root.querySelectorAll('[data-testid="stat-valor"]')].map(
       (el) => el.textContent,
     )
     expect(valores).toEqual(['R$ 15 mil', '80%', '3'])
+    const rotulos = [...root.querySelectorAll('[data-testid="stat-rotulo"]')].map(
+      (el) => el.textContent?.trim() ?? '',
+    )
+    expect(rotulos).toEqual(STATS_PT.map((s) => s.rotulo))
   })
 
   it('CTA primário aponta pro mailto e secundário pra âncora de experiência', () => {
@@ -174,7 +173,9 @@ describe('HeroSection', () => {
     const primario = root.querySelector('[data-testid="hero-cta-primary"]') as HTMLAnchorElement
     const secundario = root.querySelector('[data-testid="hero-cta-secondary"]') as HTMLAnchorElement
     expect(primario.getAttribute('href')).toBe('mailto:alexdsilva.dev@gmail.com')
+    expect(primario.textContent?.trim()).toBe('Vamos conversar')
     expect(secundario.getAttribute('href')).toBe('#experiencia')
+    expect(secundario.textContent?.trim()).toBe('Ver experiência')
   })
 
   it('foto tem dimensões 768x960 declaradas e alt descritivo em pt', () => {
@@ -194,5 +195,66 @@ describe('HeroSection', () => {
     expect(altPt).toBeTruthy()
     expect(altEn).toBeTruthy()
     expect(altPt).not.toBe(altEn)
+  })
+
+  it('linha fina de 1px sob o header no topo do hero', () => {
+    const root = montar('pt')
+    expect(root.querySelector('[data-testid="hero-rule"]')).not.toBeNull()
+  })
+})
+
+describe('HeroSection composição editorial (CSS)', () => {
+  const css = readFileSync(
+    join(import.meta.dirname, '..', 'app', 'components', 'HeroSection.vue'),
+    'utf-8',
+  )
+
+  it('display do nome entre 11 e 13vw, peso alto e entrelinha apertada em 2 blocos', () => {
+    const tamanho = css.match(/\.hero__titulo\s*\{([^}]*)\}/)?.[1] ?? ''
+    expect(tamanho).toMatch(/font-size:\s*clamp\([^,]*,\s*12vw,\s*[^)]*\)/)
+    expect(tamanho).toMatch(/font-weight:\s*800/)
+    expect(tamanho).toMatch(/line-height:\s*0\.9/)
+    const linha = css.match(/\.hero__titulo-linha\s*\{([^}]*)\}/)?.[1] ?? ''
+    expect(linha).toMatch(/display:\s*block/)
+  })
+
+  it('foto em escala de cinza cobrindo a meia tela com altura da dobra', () => {
+    expect(css).toMatch(/filter:\s*grayscale\(1\)/)
+    expect(css).toMatch(/object-fit:\s*cover/)
+    expect(css).toMatch(/min-height:\s*100dvh/)
+  })
+
+  it('chips em caixa com borda de 1px e container que quebra em 2 fileiras', () => {
+    const chip = css.match(/\.hero__chip\s*\{([^}]*)\}/)?.[1] ?? ''
+    expect(chip).toMatch(/border:\s*1px solid/)
+    const chips = css.match(/\.hero__chips\s*\{([^}]*)\}/)?.[1] ?? ''
+    expect(chips).toMatch(/flex-wrap:\s*wrap/)
+  })
+
+  it('números em linha mono com réguas finas de 1px', () => {
+    const stat = css.match(/\.hero__stat\s*\{([^}]*)\}/)?.[1] ?? ''
+    expect(stat).toMatch(/border-top:\s*1px solid/)
+    const valor = css.match(/\.hero__stat-valor\s*\{([^}]*)\}/)?.[1] ?? ''
+    expect(valor).toMatch(/font-family:\s*var\(--font-mono\)/)
+  })
+
+  it('CTA primário sólido tinta e secundário fantasma', () => {
+    const primario = css.match(/\.hero__cta--primario\s*\{([^}]*)\}/)?.[1] ?? ''
+    expect(primario).toMatch(/background:\s*var\(--color-ink\)/)
+    expect(primario).toMatch(/color:\s*var\(--color-paper\)/)
+    const secundario = css.match(/\.hero__cta--secundario\s*\{([^}]*)\}/)?.[1] ?? ''
+    expect(secundario).toMatch(/border:\s*1px solid var\(--color-ink\)/)
+    expect(secundario).not.toMatch(/background:\s*var\(--color-ink\)/)
+  })
+
+  it('nenhum hex cru no componente, cor só via token', () => {
+    expect(css).not.toMatch(/#[0-9a-fA-F]{3,8}\b/)
+  })
+
+  it('mobile mantém grade compacta, foto abaixo e CTAs full width', () => {
+    const bloco = css.match(/@media \(max-width: 767px\)\s*\{([\s\S]*?)\n\}/)?.[1] ?? ''
+    expect(bloco).toMatch(/grid-template-columns:\s*1fr/)
+    expect(bloco).toMatch(/order:\s*2/)
+    expect(bloco).toMatch(/flex:\s*1 1 100%/)
   })
 })

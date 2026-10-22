@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import StatCard from './StatCard.vue'
 import fotoHero from '../assets/img/alex-hero.jpg'
 import { useImageTrail } from '../composables/useImageTrail'
 import { useMagnetic } from '../composables/useMagnetic'
@@ -10,6 +9,10 @@ const hero = computed(() => dictionary.value.sections.hero)
 const heroEl = ref<HTMLElement | null>(null)
 const ctaPrimariaEl = ref<HTMLElement | null>(null)
 const ctaSecundariaEl = ref<HTMLElement | null>(null)
+
+// Nomes proprios de tecnologia, identicos em pt e en; "IA aplicada" e o
+// unico termo traduzivel e o dicionario hero nao e arquivo desta task.
+const CHIPS = ['Kotlin', 'Android', 'Vue.js', 'IA aplicada', 'DevOps']
 
 // O rastro reusa a MESMA foto do hero com tratamentos de filtro CSS,
 // zero bytes novos de rede, decisao aprovada no gate 2.
@@ -30,16 +33,45 @@ useMagnetic(ctaSecundariaEl)
 
 <template>
   <section id="hero" ref="heroEl" class="hero" data-testid="hero">
-    <div class="hero__conteudo">
+    <header class="hero__cabecalho">
+      <p class="hero__wordmark" data-testid="hero-wordmark">Alex Alves</p>
+    </header>
+    <div class="hero__linha" data-testid="hero-rule" aria-hidden="true"></div>
+    <div class="hero__grade">
       <div class="hero__texto">
-        <p class="hero__kicker" data-testid="hero-kicker">{{ hero.kicker }}</p>
-        <p class="hero__badge" data-testid="hero-badge">
-          <span class="hero__badge-dot" aria-hidden="true"></span>
-          {{ hero.badge }}
-        </p>
-        <h1 class="hero__titulo" data-testid="hero-title">{{ hero.h1 }}</h1>
-        <p class="hero__especialidades" data-testid="hero-specialties">{{ hero.specialties }}</p>
+        <div class="hero__topo">
+          <p class="hero__kicker" data-testid="hero-kicker">{{ hero.kicker }}</p>
+          <p class="hero__badge" data-testid="hero-badge">
+            <span class="hero__badge-dot" aria-hidden="true"></span>
+            {{ hero.badge }}
+          </p>
+        </div>
+        <h1 class="hero__titulo" data-testid="hero-title">
+          <span class="hero__titulo-linha">Alex</span>
+          <span class="hero__titulo-linha">Alves</span>
+        </h1>
+        <ul class="hero__chips" data-testid="hero-chips">
+          <li
+            v-for="chip in CHIPS"
+            :key="chip"
+            class="hero__chip"
+            data-testid="hero-chip"
+          >
+            {{ chip }}
+          </li>
+        </ul>
         <p class="hero__sub" data-testid="hero-sub">{{ hero.sub }}</p>
+        <div class="hero__stats">
+          <div
+            v-for="stat in hero.stats"
+            :key="stat.rotulo"
+            class="hero__stat"
+            data-testid="hero-stat"
+          >
+            <strong class="hero__stat-valor" data-testid="stat-valor">{{ stat.valor }}</strong>
+            <span class="hero__stat-rotulo" data-testid="stat-rotulo">{{ stat.rotulo }}</span>
+          </div>
+        </div>
         <div class="hero__ctas">
           <a
             class="hero__cta hero__cta--primario"
@@ -71,62 +103,82 @@ useMagnetic(ctaSecundariaEl)
         />
       </figure>
     </div>
-    <div class="hero__stats">
-      <StatCard
-        v-for="stat in hero.stats"
-        :key="stat.rotulo"
-        :valor="stat.valor"
-        :rotulo="stat.rotulo"
-      />
-    </div>
   </section>
 </template>
 
 <style scoped>
 .hero {
-  background: var(--color-bg);
-  color: var(--color-text);
+  background: var(--color-paper);
+  color: var(--color-ink);
+  display: flex;
+  flex-direction: column;
   font-family: var(--font-sans);
+  min-height: 100dvh;
   overflow: hidden;
-  padding-block: var(--space-section);
+  padding-block: 1.5rem clamp(2rem, 4vw, 3rem);
   padding-inline: clamp(1.25rem, 5vw, 4rem);
   position: relative;
 }
 
-.hero__conteudo,
-.hero__stats {
+.hero__grade,
+.hero :deep([data-image-trail]) {
   position: relative;
   z-index: 1;
 }
 
-.hero__conteudo {
-  align-items: center;
+.hero__cabecalho {
+  position: relative;
+  z-index: 1;
+}
+
+.hero__wordmark {
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.hero__linha {
+  border-top: 1px solid var(--color-ink);
+  margin-top: 0.75rem;
+  width: 100%;
+}
+
+.hero__grade {
+  align-items: stretch;
   display: grid;
-  gap: clamp(2rem, 5vw, 4rem);
-  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
-  margin-inline: auto;
-  max-width: 64rem;
+  flex: 1;
+  gap: clamp(2rem, 4vw, 4rem);
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  margin-top: clamp(1.5rem, 3vw, 3rem);
 }
 
 .hero__texto {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: clamp(0.9rem, 2vh, 1.5rem);
+  min-width: 0;
+}
+
+.hero__topo {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
 }
 
 .hero__kicker {
-  color: var(--color-accent);
+  color: var(--color-accent-deep);
   font-family: var(--font-mono);
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
+  letter-spacing: 0.04em;
   margin: 0;
 }
 
 .hero__badge {
   align-items: center;
-  align-self: flex-start;
   border: 1px solid color-mix(in srgb, var(--color-status-green) 45%, transparent);
-  border-radius: 999px;
-  color: var(--color-text);
   display: flex;
   font-size: 0.8125rem;
   gap: 0.5rem;
@@ -143,36 +195,79 @@ useMagnetic(ctaSecundariaEl)
 }
 
 .hero__titulo {
-  color: var(--color-text);
-  font-size: clamp(2rem, 5vw, 3rem);
-  line-height: 1.1;
+  font-size: clamp(3rem, 12vw, 12rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 0.9;
   margin: 0;
+  text-transform: uppercase;
 }
 
-.hero__especialidades {
-  color: var(--color-accent);
-  font-family: var(--font-mono);
-  font-size: 1rem;
+.hero__titulo-linha {
+  display: block;
+}
+
+.hero__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  list-style: none;
   margin: 0;
+  max-width: 30rem;
+  padding: 0;
+}
+
+.hero__chip {
+  border: 1px solid color-mix(in srgb, var(--color-ink) 40%, transparent);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  padding: 0.375rem 0.875rem;
 }
 
 .hero__sub {
-  color: var(--color-text-muted);
+  color: color-mix(in srgb, var(--color-ink) 75%, var(--color-paper));
   font-size: 1.0625rem;
   line-height: 1.6;
   margin: 0;
-  max-width: 34rem;
+  max-width: 32rem;
+}
+
+.hero__stats {
+  display: grid;
+  gap: clamp(1rem, 2vw, 2rem);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 0.5rem;
+}
+
+.hero__stat {
+  border-top: 1px solid color-mix(in srgb, var(--color-ink) 30%, transparent);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding-top: 0.75rem;
+}
+
+.hero__stat-valor {
+  color: var(--color-ink);
+  font-family: var(--font-mono);
+  font-size: 1.25rem;
+}
+
+.hero__stat-rotulo {
+  color: color-mix(in srgb, var(--color-ink) 65%, var(--color-paper));
+  font-size: 0.8125rem;
+  line-height: 1.35;
 }
 
 .hero__ctas {
   display: flex;
   flex-wrap: wrap;
   gap: 0.75rem;
-  margin-top: 0.5rem;
+  margin-top: 0.75rem;
 }
 
 .hero__cta {
-  border-radius: 0.5rem;
+  border-radius: 0.25rem;
   font-weight: 600;
   padding: 0.75rem 1.5rem;
   text-align: center;
@@ -185,81 +280,61 @@ useMagnetic(ctaSecundariaEl)
 }
 
 .hero__cta--primario {
-  background: var(--color-accent);
-  color: var(--color-bg);
+  background: var(--color-ink);
+  color: var(--color-paper);
 }
 
 .hero__cta--secundario {
-  border: 1px solid var(--color-accent);
-  color: var(--color-accent);
+  border: 1px solid var(--color-ink);
+  color: var(--color-ink);
 }
 
 .hero__foto {
+  height: 100%;
   margin: 0;
-  max-width: 24rem;
+  min-height: 0;
+}
+
+.hero__foto img {
+  display: block;
+  filter: grayscale(1);
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
 }
 
 .hero :deep([data-image-trail] img) {
   aspect-ratio: 4 / 5;
-  border: 1px solid color-mix(in srgb, var(--color-accent) 35%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-accent-deep) 35%, transparent);
   border-radius: 0.5rem;
-  box-shadow: 0 12px 32px color-mix(in srgb, var(--color-text) 25%, transparent);
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--color-ink) 25%, transparent);
   object-fit: cover;
   width: 7.5rem;
 }
 
-.hero__foto img {
-  border: 1px solid color-mix(in srgb, var(--color-accent) 30%, transparent);
-  border-radius: 0.75rem;
-  display: block;
-  height: auto;
-  width: 100%;
-}
-
-.hero__stats {
-  display: grid;
-  gap: 0.75rem;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin: clamp(2rem, 5vw, 3rem) auto 0;
-  max-width: 64rem;
-}
-
-/* Altura baixa de desktop e notebooks: compacta respiros, título e foto
-   pra kicker, selo, título, especialidades, sub, foto e os 3 números
-   caberem acima da dobra em 1280x720 (evidência qa-ux). */
+/* Altura baixa de desktop e notebooks: display e respiros compactados pra
+   nome, chips, numeros e CTAs ficarem acima da dobra em 1280x720. */
 @media (min-width: 768px) and (max-height: 820px) {
   .hero {
-    padding-block: 3rem;
+    padding-block: 1rem 2rem;
+  }
+
+  .hero__titulo {
+    font-size: clamp(2.75rem, 8.5vw, 8.5rem);
   }
 
   .hero__texto {
     gap: 0.75rem;
   }
-
-  .hero__titulo {
-    font-size: clamp(2rem, 3.5vw, 2.5rem);
-  }
-
-  .hero__foto {
-    max-width: 18rem;
-  }
-
-  .hero__stats {
-    margin-top: 1.5rem;
-  }
 }
 
 @media (max-width: 767px) {
-  .hero__conteudo {
+  .hero__grade {
     grid-template-columns: 1fr;
   }
 
   .hero__foto {
-    order: 1;
-  }
-
-  .hero__stats {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    order: 2;
   }
 
   .hero__cta {
