@@ -26,13 +26,13 @@ import StatCard from '../app/components/StatCard.vue'
 const STATS_PT = [
   { valor: 'R$ 15 mil', rotulo: 'recuperados por mês com a queda de inadimplência' },
   { valor: '80%', rotulo: 'do atendimento resolvido por pipeline de IA' },
-  { valor: '3', rotulo: 'anos de experiência com produto em produção' },
+  { valor: '3+', rotulo: 'anos de experiência com produto em produção' },
 ]
 
 const STATS_EN = [
   { valor: 'R$ 15 mil', rotulo: 'recovered per month by reducing delinquency' },
   { valor: '80%', rotulo: 'of support resolved by an AI pipeline' },
-  { valor: '3', rotulo: 'years of experience with product in production' },
+  { valor: '3+', rotulo: 'years of experience with product in production' },
 ]
 
 const CHIPS_PT = ['Kotlin', 'Android', 'Vue.js', 'IA aplicada', 'DevOps']
@@ -61,7 +61,7 @@ describe('dicionário hero', () => {
     expect(heroEn.badge).toBe('Available for opportunities')
     expect(heroEn.ctas.primary).toBe("Let's talk")
     expect(heroEn.ctas.secondary).toBe('See experience')
-    expect(heroEn.stats.map((s) => s.valor)).toEqual(['R$ 15 mil', '80%', '3'])
+    expect(heroEn.stats.map((s) => s.valor)).toEqual(['R$ 15 mil', '80%', '3+'])
   })
 
   it('en tem os rótulos dos 3 números traduzidos', () => {
@@ -173,7 +173,7 @@ describe('HeroSection', () => {
     const valores = [...root.querySelectorAll('[data-testid="stat-valor"]')].map(
       (el) => el.textContent,
     )
-    expect(valores).toEqual(['R$ 15 mil', '80%', '3'])
+    expect(valores).toEqual(['R$ 15 mil', '80%', '3+'])
     const rotulos = [...root.querySelectorAll('[data-testid="stat-rotulo"]')].map(
       (el) => el.textContent?.trim() ?? '',
     )
@@ -271,6 +271,22 @@ describe('HeroSection composição editorial (CSS)', () => {
     const secundario = css.match(/\.hero__cta--secundario\s*\{([^}]*)\}/)?.[1] ?? ''
     expect(secundario).toMatch(/border:\s*1px solid var\(--color-ink\)/)
     expect(secundario).not.toMatch(/background:\s*var\(--color-ink\)/)
+  })
+
+  it('hero full-bleed atravessa a viewport no padrao de skillset e contato', () => {
+    const raiz = css.match(/\.hero\s*\{([^}]*)\}/)?.[1] ?? ''
+    expect(raiz).toMatch(/width:\s*100vw/)
+    expect(raiz).toMatch(/margin-inline:\s*calc\(50% - 50vw\)/)
+    expect(raiz).toMatch(/padding-inline:\s*clamp\(1\.5rem,\s*6vw,\s*6rem\)/)
+  })
+
+  it('nome display gigante com teto maior e foto ocupando meia tela', () => {
+    const tamanho = css.match(/\.hero__titulo\s*\{([^}]*)\}/)?.[1] ?? ''
+    expect(tamanho).toMatch(/font-size:\s*clamp\([^,]*,\s*12vw,\s*14rem\)/)
+    const grade = [...css.matchAll(/\.hero__grade\s*\{([^}]*)\}/g)].map(
+      (m) => m[1],
+    ).find((bloco) => bloco.includes('grid-template-columns')) ?? ''
+    expect(grade).toMatch(/grid-template-columns:\s*minmax\(0,\s*1fr\)\s*minmax\(0,\s*1fr\)/)
   })
 
   it('nenhum hex cru no componente, cor só via token', () => {

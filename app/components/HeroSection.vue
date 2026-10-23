@@ -117,11 +117,15 @@ useMagnetic(ctaSecundariaEl)
   display: flex;
   flex-direction: column;
   font-family: var(--font-sans);
+  /* Full-bleed, escapa do main.container do layout atravessando a viewport,
+     mesmo padrao de Skillset e Contato, com o overflow-x clip global */
+  margin-inline: calc(50% - 50vw);
   min-height: 100dvh;
   overflow: hidden;
   padding-block: 1.5rem clamp(2rem, 4vw, 3rem);
-  padding-inline: clamp(1.25rem, 5vw, 4rem);
+  padding-inline: clamp(1.5rem, 6vw, 6rem);
   position: relative;
+  width: 100vw;
 }
 
 .hero__grade {
@@ -153,7 +157,7 @@ useMagnetic(ctaSecundariaEl)
   display: grid;
   flex: 1;
   gap: clamp(2rem, 4vw, 4rem);
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   margin-top: clamp(1.5rem, 3vw, 3rem);
 }
 
@@ -198,7 +202,7 @@ useMagnetic(ctaSecundariaEl)
 }
 
 .hero__titulo {
-  font-size: clamp(3rem, 12vw, 12rem);
+  font-size: clamp(3rem, 12vw, 14rem);
   font-weight: 800;
   letter-spacing: -0.02em;
   line-height: 0.9;
@@ -216,7 +220,7 @@ useMagnetic(ctaSecundariaEl)
   gap: 0.5rem;
   list-style: none;
   margin: 0;
-  max-width: 30rem;
+  max-width: 36rem;
   padding: 0;
 }
 
@@ -238,7 +242,7 @@ useMagnetic(ctaSecundariaEl)
   font-size: 1.0625rem;
   line-height: 1.6;
   margin: 0;
-  max-width: 32rem;
+  max-width: 36rem;
 }
 
 .hero__stats {
