@@ -9,8 +9,13 @@
   margin: 0;
 }
 
+/* Seções full-bleed usam 100vw, que inclui a largura da scrollbar em sistemas
+   clássicos (Windows e Linux) e gera ~15px de rolagem horizontal. clip corta
+   o estouro sem criar contexto de scroll que quebraria o Lenis. Browsers sem
+   suporte a clip (pré-2022) aceitam overflow-x hidden como fallback. */
 html {
   scroll-behavior: smooth;
+  overflow-x: clip;
 }
 
 body {
@@ -19,6 +24,7 @@ body {
   font-family: var(--font-sans);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
 }
 
 img,
