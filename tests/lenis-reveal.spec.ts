@@ -298,23 +298,44 @@ describe('useReveal', () => {
     stubMatchMedia(true, true)
     const fromSpy = vi.spyOn(gsap, 'from').mockImplementation(() => undefined as never)
 
-    montarSecaoComLinhas()
+    const { secao } = montarSecaoComLinhas()
 
     expect(fromSpy).not.toHaveBeenCalled()
+    expect(
+      secao.querySelectorAll('.reveal-mask'),
+      'máscara é estado inicial de animação, com movimento reduzido nada é tocado',
+    ).toHaveLength(0)
   })
 
-  it('subida sutil das linhas, 10px com fade em vez de slide dramático', () => {
+  it('máscara de linha, conteúdo sobe de 110 por cento pra zero com ease expo out, sem fade', () => {
     stubMatchMedia(true)
     const fromSpy = vi.spyOn(gsap, 'from').mockImplementation(() => undefined as never)
 
     montarSecaoComLinhas()
 
     const vars = fromSpy.mock.calls[0]?.[1] as Record<string, unknown>
-    expect(vars.y).toBe(10)
-    expect(vars.opacity).toBe(0)
-    expect(vars, 'o slide de linha inteira escondia o efeito do dono').not.toHaveProperty(
-      'yPercent',
+    expect(vars.yPercent).toBe(110)
+    expect(vars.ease).toBe('expo.out')
+    expect(vars, 'o fade de opacidade é o fadezinho criticado pelo dono').not.toHaveProperty(
+      'opacity',
     )
+    expect(vars, 'subida em px volta ao slide raso de antes').not.toHaveProperty('y')
+    expect(vars.stagger, 'stagger entre linhas no padrão editorial').toBeGreaterThan(0)
+  })
+
+  it('envolve cada linha em máscara de corte com overflow hidden criada só por JS', () => {
+    stubMatchMedia(true)
+    vi.spyOn(gsap, 'from').mockImplementation(() => undefined as never)
+
+    const { secao } = montarSecaoComLinhas()
+
+    const linhas = secao.querySelectorAll('.reveal-line')
+    expect(linhas.length).toBeGreaterThan(0)
+    linhas.forEach((linha) => {
+      const mascara = linha.parentElement
+      expect(mascara?.classList.contains('reveal-mask')).toBe(true)
+      expect(mascara?.style.overflow).toBe('hidden')
+    })
   })
 
   it('refresca os gatilhos quando a página termina de carregar e cancela no unmount', () => {
@@ -353,6 +374,9 @@ describe('SectionHeading', () => {
     const linha = titulo?.querySelector('.reveal-line')
     expect(linha).not.toBeNull()
     expect(linha?.textContent).toBe('Tecnologias')
+    const mascara = linha?.parentElement
+    expect(mascara?.classList.contains('reveal-mask')).toBe(true)
+    expect(mascara?.style.overflow).toBe('hidden')
 
     app.unmount()
   })

@@ -3,6 +3,7 @@ import { basename, join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h } from 'vue'
 import type { Component } from 'vue'
+import { gsap } from 'gsap'
 import ProjectRow from '../app/components/ProjectRow.vue'
 import StatusBadge from '../app/components/StatusBadge.vue'
 import { projects } from '../app/content/projects'
@@ -479,5 +480,214 @@ describe('ícones de tecnologia no skillset', () => {
     const css = lerComponente('SkillsetSection.vue')
     expect(css).toMatch(/\.skillset__icones img\s*\{[^}]*pointer-events:\s*none/)
     expect(css).toMatch(/\.skillset__icones img\s*\{[^}]*height:\s*(1\.75rem|2rem|2\.5rem)/)
+  })
+})
+
+/*
+ * Preview no padrão Dennis Snellenberg, no desktop com movimento a imagem
+ * persegue o cursor horizontalmente dentro da linha, com rotação proporcional
+ * à velocidade, sombra e fade ao entrar e sair. Mobile e movimento reduzido
+ * mantêm o preview estático de hoje.
+ */
+
+function stubMidia(ponteiroFino: boolean, movimentoReduzido = false) {
+  vi.stubGlobal(
+    'matchMedia',
+    vi.fn((query: string) => ({
+      matches: query.includes('reduced-motion') ? movimentoReduzido : ponteiroFino,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    })),
+  )
+}
+
+function montarLinhaUnica(index = 0) {
+  const root = document.createElement('div')
+  document.body.appendChild(root)
+  const app = createApp({
+    render: () =>
+      h(ProjectRow, {
+        project: projects[index],
+        text: pt.items[index],
+        labels: pt.meta,
+        verProjeto: pt.verProjeto,
+      }),
+  })
+  app.mount(root)
+  const linha = root.querySelector('[data-testid="project-row"]') as HTMLElement
+  const preview = linha.querySelector('[data-testid="project-row-preview"]') as HTMLImageElement
+  vi.spyOn(linha, 'getBoundingClientRect').mockReturnValue({
+    left: 0,
+    width: 1000,
+    top: 0,
+    height: 200,
+    right: 1000,
+    bottom: 200,
+    x: 0,
+    y: 0,
+    toJSON: () => ({}),
+  } as DOMRect)
+  Object.defineProperty(preview, 'offsetWidth', { value: 320, configurable: true })
+  return { app, linha, preview }
+}
+
+describe('ProjectRow, preview perseguindo o cursor', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    vi.restoreAllMocks()
+  })
+
+  it('no desktop com movimento, o mount cria a perseguição por quickTo de x e rotação', () => {
+    stubMidia(true)
+    const quickToSpy = vi.spyOn(gsap, 'quickTo').mockImplementation(() => vi.fn() as never)
+    vi.spyOn(gsap, 'set').mockImplementation(() => undefined as never)
+
+    const { app, preview } = montarLinhaUnica()
+
+    expect(quickToSpy).toHaveBeenCalledTimes(2)
+    expect(quickToSpy.mock.calls[0][0]).toBe(preview)
+    expect(quickToSpy.mock.calls[0][1]).toBe('x')
+    expect(quickToSpy.mock.calls[1][1]).toBe('rotation')
+    const varsX = quickToSpy.mock.calls[0][2] as Record<string, unknown>
+    expect(varsX.ease).toBe('power3.out')
+    expect(varsX.duration).toBeGreaterThan(0)
+
+    app.unmount()
+  })
+
+  it('entrar na linha acende o preview com fade e assenta a base de transform', () => {
+    stubMidia(true)
+    vi.spyOn(gsap, 'quickTo').mockImplementation(() => vi.fn() as never)
+    const setSpy = vi.spyOn(gsap, 'set').mockImplementation(() => undefined as never)
+    const toSpy = vi.spyOn(gsap, 'to').mockImplementation(() => undefined as never)
+
+    const { app, linha, preview } = montarLinhaUnica()
+
+    linha.dispatchEvent(new MouseEvent('mouseenter', { clientX: 5000 }))
+
+    expect(toSpy).toHaveBeenCalledWith(preview, expect.objectContaining({ opacity: 1 }))
+    const varsSet = setSpy.mock.calls[0][1] as Record<string, unknown>
+    expect(varsSet.yPercent).toBe(-50)
+    expect(varsSet.rotate).toBe(-3)
+
+    app.unmount()
+  })
+
+  it('mousemove persegue o cursor com lerp suave e clamp nos limites da linha', () => {
+    stubMidia(true)
+    const quickToSpy = vi.spyOn(gsap, 'quickTo').mockImplementation(() => vi.fn() as never)
+
+    const { app, linha } = montarLinhaUnica()
+
+    linha.dispatchEvent(new MouseEvent('mouseenter', { clientX: 5000 }))
+    const seguirX = quickToSpy.mock.results[0].value as ReturnType<typeof vi.fn>
+
+    // Cursor no meio da linha de 1000px com preview de 320 fica em 500 menos metade.
+    linha.dispatchEvent(new MouseEvent('mousemove', { clientX: 500 }))
+    expect(seguirX).toHaveBeenLastCalledWith(340)
+
+    // Cursor além do fim da linha, o clamp prende em 1000 menos 320.
+    linha.dispatchEvent(new MouseEvent('mousemove', { clientX: 5000 }))
+    expect(seguirX).toHaveBeenLastCalledWith(680)
+
+    // Cursor antes do começo, o clamp prende em zero.
+    linha.dispatchEvent(new MouseEvent('mousemove', { clientX: 10 }))
+    expect(seguirX).toHaveBeenLastCalledWith(0)
+
+    app.unmount()
+  })
+
+  it('rotação proporcional à velocidade, suavizada por interpolação e saturada em 10 graus', () => {
+    stubMidia(true)
+    const quickToSpy = vi.spyOn(gsap, 'quickTo').mockImplementation(() => vi.fn() as never)
+
+    const { app, linha } = montarLinhaUnica()
+
+    linha.dispatchEvent(new MouseEvent('mouseenter', { clientX: 5000 }))
+    const inclinar = quickToSpy.mock.results[1].value as ReturnType<typeof vi.fn>
+
+    linha.dispatchEvent(new MouseEvent('mousemove', { clientX: 5000 }))
+    expect(inclinar).toHaveBeenNthCalledWith(1, 0)
+
+    linha.dispatchEvent(new MouseEvent('mousemove', { clientX: 5020 }))
+    expect(inclinar).toHaveBeenNthCalledWith(2, 2)
+
+    linha.dispatchEvent(new MouseEvent('mousemove', { clientX: 5060 }))
+    expect(inclinar).toHaveBeenNthCalledWith(3, 5)
+
+    // Recuo violento de 5050px satura no limite de rotação.
+    linha.dispatchEvent(new MouseEvent('mousemove', { clientX: 10 }))
+    expect(inclinar).toHaveBeenLastCalledWith(-2.5)
+
+    app.unmount()
+  })
+
+  it('sair da linha apaga o preview com fade e devolve a rotação pro repouso', () => {
+    stubMidia(true)
+    const quickToSpy = vi.spyOn(gsap, 'quickTo').mockImplementation(() => vi.fn() as never)
+    const toSpy = vi.spyOn(gsap, 'to').mockImplementation(() => undefined as never)
+
+    const { app, linha, preview } = montarLinhaUnica()
+
+    linha.dispatchEvent(new MouseEvent('mouseenter', { clientX: 5000 }))
+    linha.dispatchEvent(new MouseEvent('mousemove', { clientX: 5020 }))
+    linha.dispatchEvent(new MouseEvent('mouseleave'))
+
+    expect(toSpy).toHaveBeenLastCalledWith(preview, expect.objectContaining({ opacity: 0 }))
+    const inclinar = quickToSpy.mock.results[1].value as ReturnType<typeof vi.fn>
+    expect(inclinar).toHaveBeenLastCalledWith(0)
+
+    app.unmount()
+  })
+
+  it('unmount desliga a perseguição, mousemove órfão não move nada', () => {
+    stubMidia(true)
+    const quickToSpy = vi.spyOn(gsap, 'quickTo').mockImplementation(() => vi.fn() as never)
+
+    const { app, linha } = montarLinhaUnica()
+    linha.dispatchEvent(new MouseEvent('mouseenter', { clientX: 5000 }))
+    const seguirX = quickToSpy.mock.results[0].value as ReturnType<typeof vi.fn>
+    const chamadasNoAr = seguirX.mock.calls.length
+
+    app.unmount()
+    linha.dispatchEvent(new MouseEvent('mousemove', { clientX: 9000 }))
+
+    expect(seguirX.mock.calls.length).toBe(chamadasNoAr)
+  })
+
+  it('movimento reduzido ou ponteiro grosso não cria perseguição, preview estático', () => {
+    for (const [fino, reduzido] of [
+      [true, true],
+      [false, false],
+    ]) {
+      stubMidia(fino, reduzido)
+      const quickToSpy = vi.spyOn(gsap, 'quickTo').mockImplementation(() => vi.fn() as never)
+      const toSpy = vi.spyOn(gsap, 'to').mockImplementation(() => undefined as never)
+
+      const { app, linha } = montarLinhaUnica()
+      linha.dispatchEvent(new MouseEvent('mouseenter', { clientX: 5000 }))
+      linha.dispatchEvent(new MouseEvent('mousemove', { clientX: 6000 }))
+
+      expect(quickToSpy).not.toHaveBeenCalled()
+      expect(toSpy).not.toHaveBeenCalled()
+
+      app.unmount()
+      vi.restoreAllMocks()
+    }
+  })
+
+  it('linha sem url, o SaaS, mantém o preview neutro sem perseguição', () => {
+    stubMidia(true)
+    const quickToSpy = vi.spyOn(gsap, 'quickTo').mockImplementation(() => vi.fn() as never)
+    const toSpy = vi.spyOn(gsap, 'to').mockImplementation(() => undefined as never)
+
+    const { app, linha } = montarLinhaUnica(3)
+    linha.dispatchEvent(new MouseEvent('mouseenter', { clientX: 5000 }))
+    linha.dispatchEvent(new MouseEvent('mousemove', { clientX: 6000 }))
+
+    expect(quickToSpy).not.toHaveBeenCalled()
+    expect(toSpy).not.toHaveBeenCalled()
+
+    app.unmount()
   })
 })

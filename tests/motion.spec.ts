@@ -5,6 +5,8 @@ import {
   PRELOADER_CEILING_MS,
   computeProgress,
   intensidadeBrilhoRodape,
+  interpolar,
+  limitar,
 } from '../app/utils/motion'
 import { usePrefersReducedMotion } from '../app/composables/usePrefersReducedMotion'
 
@@ -142,5 +144,59 @@ describe('intensidadeBrilhoRodape', () => {
     expect(() => intensidadeBrilhoRodape(0.5, 1)).toThrow(RangeError)
     expect(() => intensidadeBrilhoRodape(0.5, 1.2)).toThrow(RangeError)
     expect(() => intensidadeBrilhoRodape(0.5, -0.1)).toThrow(RangeError)
+  })
+})
+
+describe('limitar', () => {
+  it('devolve o proprio valor quando esta dentro da faixa', () => {
+    expect(limitar(5, 0, 10)).toBe(5)
+    expect(limitar(0, 0, 10)).toBe(0)
+    expect(limitar(10, 0, 10)).toBe(10)
+  })
+
+  it('presa no minimo quando fica abaixo da faixa', () => {
+    expect(limitar(-1, 0, 10)).toBe(0)
+    expect(limitar(-50, 0, 10)).toBe(0)
+  })
+
+  it('presa no maximo quando fica acima da faixa', () => {
+    expect(limitar(11, 0, 10)).toBe(10)
+    expect(limitar(5000, 0, 680)).toBe(680)
+  })
+
+  it('faixa degenerada com min igual a max devolve o limite comum', () => {
+    expect(limitar(7, 0, 0)).toBe(0)
+  })
+
+  it('trata NaN como o minimo, nunca posição fantasma', () => {
+    expect(limitar(Number.NaN, 0, 10)).toBe(0)
+  })
+
+  it('rejeita faixa invertida com erro claro', () => {
+    expect(() => limitar(5, 10, 0)).toThrow(RangeError)
+  })
+})
+
+describe('interpolar', () => {
+  it('fica no ponto atual com fator zero', () => {
+    expect(interpolar(3, 9, 0)).toBe(3)
+  })
+
+  it('chega no alvo com fator um', () => {
+    expect(interpolar(3, 9, 1)).toBe(9)
+  })
+
+  it('caminha proporcional no meio da distancia', () => {
+    expect(interpolar(0, 10, 0.5)).toBe(5)
+    expect(interpolar(2, 8, 0.5)).toBe(5)
+  })
+
+  it('interpola em direção negativa, rotação voltando pro repouso', () => {
+    expect(interpolar(5, -10, 0.5)).toBe(-2.5)
+  })
+
+  it('fator fora de zero a um extrapola, sem erro', () => {
+    expect(interpolar(0, 10, 2)).toBe(20)
+    expect(interpolar(0, 10, -1)).toBe(-10)
   })
 })

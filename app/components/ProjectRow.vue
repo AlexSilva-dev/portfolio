@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { gsap } from 'gsap'
 import type { Project } from '../content/projects'
 import type { ProjectsDict } from '../i18n/sections/projects'
 import StatusBadge from './StatusBadge.vue'
+import { usePrefersReducedMotion } from '../composables/usePrefersReducedMotion'
+import { interpolar, limitar } from '../utils/motion'
 
 const props = defineProps<{
   project: Project
@@ -11,6 +14,15 @@ const props = defineProps<{
   verProjeto: string
 }>()
 
+/* Perseguição do preview no padrão Dennis Snellenberg, só no desktop com
+   ponteiro fino e sem movimento reduzido. A rotação acompanha a velocidade
+   do cursor suavizada por interpolação e satura pra não virar piada. */
+const FATOR_ROTACAO = 0.2
+const LIMITE_ROTACAO_GRAUS = 10
+const SUAVIZACAO_ROTACAO = 0.5
+const DURACAO_PERSEGUICAO_SEG = 0.5
+const DURACAO_FADE_SEG = 0.3
+
 // Com url a linha inteira é clicável, sem url nenhum elemento clicável.
 // O SaaS (sem url) mantém o selo neutro de dot e texto e nenhuma âncora.
 const linkAttrs = computed(() =>
@@ -18,11 +30,105 @@ const linkAttrs = computed(() =>
     ? { href: props.project.url, target: '_blank', rel: 'noopener' }
     : {},
 )
+
+const { prefersReducedMotion } = usePrefersReducedMotion()
+
+const raiz = ref<HTMLElement | null>(null)
+const preview = ref<HTMLImageElement | null>(null)
+
+let contexto: ReturnType<typeof gsap.context> | null = null
+let seguirX: ((x: number) => void) | null = null
+let inclinar: ((rotacao: number) => void) | null = null
+let anteriorX = 0
+let velocidadeSuavizada = 0
+let desligar = () => {}
+
+const podePerseguir = () =>
+  typeof window !== 'undefined' &&
+  !!props.project.url &&
+  !prefersReducedMotion.value &&
+  window.matchMedia('(hover: hover) and (pointer: fine)').matches
+
+const aoEntrar = (evento: MouseEvent) => {
+  const alvo = preview.value
+  if (!contexto || !alvo) return
+  anteriorX = evento.clientX
+  velocidadeSuavizada = 0
+  gsap.to(alvo, { opacity: 1, duration: DURACAO_FADE_SEG, overwrite: 'auto' })
+}
+
+const aoMover = (evento: MouseEvent) => {
+  const linha = raiz.value
+  const alvo = preview.value
+  if (!contexto || !linha || !alvo || !seguirX || !inclinar) return
+  const largura = alvo.offsetWidth
+  if (!largura) return
+  const faixa = linha.getBoundingClientRect()
+  seguirX(
+    limitar(evento.clientX - faixa.left - largura / 2, 0, Math.max(faixa.width - largura, 0)),
+  )
+
+  const bruta = limitar(
+    (evento.clientX - anteriorX) * FATOR_ROTACAO,
+    -LIMITE_ROTACAO_GRAUS,
+    LIMITE_ROTACAO_GRAUS,
+  )
+  anteriorX = evento.clientX
+  velocidadeSuavizada = interpolar(velocidadeSuavizada, bruta, SUAVIZACAO_ROTACAO)
+  inclinar(velocidadeSuavizada)
+}
+
+const aoSair = () => {
+  const alvo = preview.value
+  if (!contexto || !alvo) return
+  velocidadeSuavizada = 0
+  inclinar?.(0)
+  gsap.to(alvo, { opacity: 0, duration: DURACAO_FADE_SEG, overwrite: 'auto' })
+}
+
+onMounted(() => {
+  if (!podePerseguir()) return
+  const linha = raiz.value
+  const alvo = preview.value
+  if (!linha || !alvo) return
+
+  contexto = gsap.context(() => {
+    // O gsap assume o transform, a base replica o estado estático do CSS.
+    gsap.set(alvo, { yPercent: -50, rotate: -3 })
+    seguirX = gsap.quickTo(alvo, 'x', {
+      duration: DURACAO_PERSEGUICAO_SEG,
+      ease: 'power3.out',
+    })
+    inclinar = gsap.quickTo(alvo, 'rotation', {
+      duration: DURACAO_PERSEGUICAO_SEG,
+      ease: 'power3.out',
+    })
+  }, linha)
+
+  linha.addEventListener('mouseenter', aoEntrar)
+  linha.addEventListener('mousemove', aoMover)
+  linha.addEventListener('mouseleave', aoSair)
+  desligar = () => {
+    linha.removeEventListener('mouseenter', aoEntrar)
+    linha.removeEventListener('mousemove', aoMover)
+    linha.removeEventListener('mouseleave', aoSair)
+  }
+})
+
+onUnmounted(() => {
+  desligar()
+  desligar = () => {}
+  contexto?.revert()
+  contexto = null
+  seguirX = null
+  inclinar = null
+})
 </script>
 
 <template>
   <component
     :is="project.url ? 'a' : 'article'"
+    ref="raiz"
     class="project-row"
     :class="{ 'project-row--link': !!project.url }"
     data-testid="project-row"
@@ -45,6 +151,7 @@ const linkAttrs = computed(() =>
       </span>
     </span>
     <img
+      ref="preview"
       class="project-row__preview"
       :src="project.preview"
       alt=""

@@ -7,15 +7,21 @@ import { agendarRefreshGatilhos } from '../utils/motion'
 gsap.registerPlugin(ScrollTrigger)
 
 const REVEAL_LINE_SELECTOR = '.reveal-line'
+const REVEAL_MASK_CLASS = 'reveal-mask'
 const INICIO_ENTRADA = 'top 80%'
-/** Subida sutil da linha, em px, suficiente pra dar entrada sem sumir com o título. */
-const SUBIDA_LINHA_PX = 10
+/** O conteúdo nasce abaixo do corte da máscara e sobe até assentar no lugar. */
+const ENTRADA_MASCARA_PERCENT = 110
+const DURACAO_ENTRADA_SEG = 0.9
+const ESCALONAMENTO_LINHAS_SEG = 0.12
 
 /**
- * Reveal linha a linha na primeira entrada da seção. Os spans .reveal-line
- * ficam escritos no template, o texto está no HTML desde o servidor e o
- * estado inicial oculto é aplicado só por JavaScript. Movimento reduzido
- * corta a animação e o conteúdo permanece visível. O contexto gsap escopa
+ * Reveal editorial por máscara de linha na primeira entrada da seção. Cada
+ * span .reveal-line fica escrito no template e ganha por JavaScript um
+ * wrapper .reveal-mask com overflow hidden, o texto desliza de dentro do
+ * corte subindo de 110 por cento pra zero com ease expo out e stagger entre
+ * linhas. O texto está no HTML desde o servidor e o estado inicial oculto
+ * é aplicado só por JavaScript. Movimento reduzido corta tudo, nenhuma
+ * máscara é criada e o conteúdo permanece visível. O contexto gsap escopa
  * os tweens no elemento raiz e é revertido no unmount.
  */
 export function useReveal(raiz: Ref<HTMLElement | null>) {
@@ -33,12 +39,22 @@ export function useReveal(raiz: Ref<HTMLElement | null>) {
       const linhas = el.querySelectorAll(REVEAL_LINE_SELECTOR)
       if (!linhas.length) return
 
+      // O corte vive na máscara, cada linha desliza de dentro do próprio vão.
+      linhas.forEach((linha) => {
+        if (linha.parentElement?.classList.contains(REVEAL_MASK_CLASS)) return
+        const mascara = document.createElement('span')
+        mascara.className = REVEAL_MASK_CLASS
+        mascara.style.display = 'block'
+        mascara.style.overflow = 'hidden'
+        linha.parentNode?.insertBefore(mascara, linha)
+        mascara.appendChild(linha)
+      })
+
       gsap.from(linhas, {
-        y: SUBIDA_LINHA_PX,
-        opacity: 0,
-        duration: 0.7,
-        stagger: 0.12,
-        ease: 'power3.out',
+        yPercent: ENTRADA_MASCARA_PERCENT,
+        duration: DURACAO_ENTRADA_SEG,
+        stagger: ESCALONAMENTO_LINHAS_SEG,
+        ease: 'expo.out',
         scrollTrigger: {
           trigger: el,
           start: INICIO_ENTRADA,

@@ -27,6 +27,27 @@ export function agendarRefreshGatilhos(refresh: () => void): () => void {
 }
 
 /**
+ * Presa o valor dentro da faixa de min a max. NaN volta como min, faixa
+ * invertida é erro de programação e falha alto e claro.
+ */
+export function limitar(valor: number, min: number, max: number): number {
+  if (min > max) {
+    throw new RangeError(`faixa invertida, min ${min} não pode passar de max ${max}`)
+  }
+  if (Number.isNaN(valor)) return min
+  return Math.min(Math.max(valor, min), max)
+}
+
+/**
+ * Interpola do ponto atual na direção do alvo pelo fator do caminho.
+ * Fator 0 fica parado, 1 chega no alvo, valores fora extrapolam de propósito
+ * (é o que dá lerp com folga). Base do atraso suave do preview de projeto.
+ */
+export function interpolar(atual: number, alvo: number, fator: number): number {
+  return atual + (alvo - atual) * fator
+}
+
+/**
  * Progresso puro do preloader, de 0 a 100.
  * Satura em 100 quando o tempo atingir o teto, independentemente de rede.
  */
