@@ -2,9 +2,24 @@
 import gifAlex from '../assets/gifs/alex.gif'
 import { useParallax } from '../composables/useParallax'
 import { useTilt } from '../composables/useTilt'
+import { useCursorLit } from '../composables/useCursorLit'
 
 const { locale, dictionary } = useLocale()
 const paragrafo = computed(() => dictionary.value.sections.about.paragraphs[1])
+
+// Trecho que acende direto pro violeta profundo, por idioma.
+const DESTAQUE = {
+  pt: 'nadar contra a maré',
+  en: 'swim against the current',
+} as const
+const destaque = computed(() => DESTAQUE[locale.value] ?? DESTAQUE.pt)
+
+const textoEl = ref<HTMLElement | null>(null)
+
+useCursorLit(textoEl, {
+  texto: () => paragrafo.value,
+  destaque: () => destaque.value,
+})
 
 const polaroideEl = ref<HTMLElement | null>(null)
 // Parallax de scroll e tilt de ponteiro, ambos cortados com movimento reduzido
@@ -22,7 +37,8 @@ const alt = computed(() => ALTS[locale.value] ?? ALTS.pt)
 <template>
   <section id="sobre" class="evolucao" data-testid="section-evolution">
     <div class="evolucao__miolo">
-      <p class="evolucao__texto" data-testid="evolution-texto">{{ paragrafo }}</p>
+      <!-- v-once, o composable é o dono do conteúdo deste nó depois do mount -->
+      <p ref="textoEl" v-once class="evolucao__texto" data-testid="evolution-texto">{{ paragrafo }}</p>
       <figure
         ref="polaroideEl"
         class="evolucao__polaroide"
@@ -66,6 +82,17 @@ const alt = computed(() => ALTS[locale.value] ?? ALTS.pt)
   max-width: 58rem;
 }
 
+/* Palavra do acendimento por cursor, a transição curta é só a ponte entre
+   o dim e a tinta cheia, o estado dim vive no inline do composable. */
+.evolucao__texto :deep(.evolucao__palavra) {
+  transition: opacity 0.18s ease;
+}
+
+/* O trecho contra a maré acende pro violeta profundo em vez de tinta. */
+.evolucao__texto :deep(.evolucao__palavra--destaque) {
+  color: var(--color-accent-deep);
+}
+
 /* Polaroid do GIF, moldura branca sobre papel sustentada pela sombra difusa.
    A variavel --polaroide-elevacao, de 0 a 1, e animada pelo tilt do ponteiro
    e faz a sombra crescer junto com a inclinacao. */
@@ -100,7 +127,8 @@ const alt = computed(() => ALTS[locale.value] ?? ALTS.pt)
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .evolucao__polaroide img {
+  .evolucao__polaroide img,
+  .evolucao__texto :deep(.evolucao__palavra) {
     transition: none;
   }
 }
