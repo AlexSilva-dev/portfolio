@@ -597,6 +597,58 @@ describe('ProjectRow, preview perseguindo o cursor', () => {
     app.unmount()
   })
 
+  it('o x do quickTo é delta a partir da base estática do CSS e centraliza o preview no cursor', () => {
+    stubMidia(true)
+    const quickToSpy = vi.spyOn(gsap, 'quickTo').mockImplementation(() => vi.fn() as never)
+
+    const { app, linha, preview } = montarLinhaUnica()
+    // CSS ancora o preview a 60px da borda direita numa linha de 1000px, base de layout em 620.
+    Object.defineProperty(preview, 'offsetLeft', { value: 620, configurable: true })
+    linha.dispatchEvent(new MouseEvent('mouseenter', { clientX: 500 }))
+    const seguirX = quickToSpy.mock.results[0].value as ReturnType<typeof vi.fn>
+
+    // Cursor no meio da linha, destino 340 menos a base 620 dá o delta -280.
+    linha.dispatchEvent(new MouseEvent('mousemove', { clientX: 500 }))
+    expect(seguirX).toHaveBeenLastCalledWith(-280)
+
+    // Clamp nas pontas também em delta, o final fica dentro de [0, 680].
+    linha.dispatchEvent(new MouseEvent('mousemove', { clientX: 5000 }))
+    expect(seguirX).toHaveBeenLastCalledWith(60)
+
+    linha.dispatchEvent(new MouseEvent('mousemove', { clientX: 10 }))
+    expect(seguirX).toHaveBeenLastCalledWith(-620)
+
+    app.unmount()
+  })
+
+  it('com scroll horizontal da página o final continua dentro dos limites relativos da linha', () => {
+    stubMidia(true)
+    const quickToSpy = vi.spyOn(gsap, 'quickTo').mockImplementation(() => vi.fn() as never)
+
+    const { app, linha, preview } = montarLinhaUnica()
+    Object.defineProperty(preview, 'offsetLeft', { value: 620, configurable: true })
+    linha.dispatchEvent(new MouseEvent('mouseenter', { clientX: 500 }))
+    const seguirX = quickToSpy.mock.results[0].value as ReturnType<typeof vi.fn>
+
+    // Página rolada 400px, a linha vai pra left -400 no viewport e o cursor em 100.
+    vi.spyOn(linha, 'getBoundingClientRect').mockReturnValue({
+      left: -400,
+      width: 1000,
+      top: 0,
+      height: 200,
+      right: 600,
+      bottom: 200,
+      x: -400,
+      y: 0,
+      toJSON: () => ({}),
+    } as DOMRect)
+    linha.dispatchEvent(new MouseEvent('mousemove', { clientX: 100 }))
+    // 100 - (-400) - 160 = 340 relativo à linha, delta -280 da base, final em 340 de [0, 680].
+    expect(seguirX).toHaveBeenLastCalledWith(-280)
+
+    app.unmount()
+  })
+
   it('rotação proporcional à velocidade, suavizada por interpolação e saturada em 10 graus', () => {
     stubMidia(true)
     const quickToSpy = vi.spyOn(gsap, 'quickTo').mockImplementation(() => vi.fn() as never)

@@ -64,9 +64,15 @@ const aoMover = (evento: MouseEvent) => {
   const largura = alvo.offsetWidth
   if (!largura) return
   const faixa = linha.getBoundingClientRect()
-  seguirX(
-    limitar(evento.clientX - faixa.left - largura / 2, 0, Math.max(faixa.width - largura, 0)),
+  // O x do transform é delta a partir da base estática do CSS, o preview fica
+  // ancorado a right e o destino é a posição relativa à linha com o centro no cursor.
+  // Reler a base e o rect a cada movimento cobre resize e scroll da página.
+  const destino = limitar(
+    evento.clientX - faixa.left - largura / 2,
+    0,
+    Math.max(faixa.width - largura, 0),
   )
+  seguirX(destino - alvo.offsetLeft)
 
   const bruta = limitar(
     (evento.clientX - anteriorX) * FATOR_ROTACAO,

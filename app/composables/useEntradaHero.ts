@@ -100,7 +100,10 @@ export function useEntradaHero(raiz: Ref<HTMLElement | null>) {
               ease: 'none',
               onUpdate: () => {
                 valorEl.textContent = formatarContado(
-                  valorContado(progresso.t * DURACAO_CONTAGEM_MS, { ate: partido.numero }),
+                  valorContado(progresso.t * DURACAO_CONTAGEM_MS, {
+                    ate: partido.numero,
+                    duracaoMs: DURACAO_CONTAGEM_MS,
+                  }),
                   { prefixo: partido.prefixo, sufixo: partido.sufixo },
                 )
               },

@@ -736,6 +736,45 @@ describe('coreografia de entrada do hero', () => {
       expect(valores).toEqual(['R$ 15 mil', '80%', '3+'])
     })
 
+    it('onUpdate da contagem chama a função pura como o tween chama e não lança', () => {
+      const capturas: Array<{ progresso: { t: number }, atualizar: () => void }> = []
+      const timelineReal = gsap.timeline.bind(gsap)
+      const timelineSpy = vi.spyOn(gsap, 'timeline').mockImplementation(((...args) => {
+        const linha = timelineReal(...(args as Parameters<typeof gsap.timeline>))
+        const toReal = linha.to.bind(linha)
+        linha.to = ((alvo: unknown, vars: Record<string, unknown>, posicao?: unknown) => {
+          if (typeof vars.onUpdate === 'function') {
+            capturas.push({
+              progresso: alvo as { t: number },
+              atualizar: vars.onUpdate as () => void,
+            })
+          }
+          return toReal(alvo, vars, posicao)
+        }) as typeof linha.to
+        return linha
+      }) as typeof gsap.timeline)
+
+      const { root, app } = montarHero(true, false)
+      expect(capturas.length).toBeGreaterThan(0)
+
+      for (const { progresso, atualizar } of capturas) {
+        // Frame real do tween, progresso no meio da corrida.
+        progresso.t = 0.5
+        expect(() => atualizar()).not.toThrow()
+        // Último frame, o valor final tem que chegar no DOM.
+        progresso.t = 1
+        expect(() => atualizar()).not.toThrow()
+      }
+
+      const valores = [...root.querySelectorAll('[data-testid="stat-valor"]')].map(
+        (el) => el.textContent,
+      )
+      expect(valores).toEqual(['R$ 15 mil', '80%', '3+'])
+
+      app.unmount()
+      timelineSpy.mockRestore()
+    })
+
     it('revert no unmount devolve os estilos inline ao estado original', () => {
       const { root, app } = montarHero(true, false)
       const texto = root.querySelector('.hero__titulo-texto') as HTMLElement
