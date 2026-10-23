@@ -33,27 +33,22 @@ afterEach(() => {
 })
 
 describe('conteúdo estruturado de projetos', () => {
-  it('expõe 4 projetos na ordem CRM, UcaTech, Check All Pages e SaaS', () => {
+  it('expõe 3 projetos na ordem CRM, UcaTech e Check All Pages', () => {
     expect(projects.map((p) => p.slug)).toEqual([
       'crm-adsalesbrazil',
       'ucatech',
       'check-all-pages',
-      'saas-marketplaces',
     ])
   })
 
   it('define o status de cada projeto na ordem', () => {
-    expect(projects.map((p) => p.status)).toEqual(['production', 'wip', 'tool', 'neutral'])
+    expect(projects.map((p) => p.status)).toEqual(['production', 'wip', 'tool'])
   })
 
   it('linka CRM ao site oficial, UcaTech ao site oficial e Check All Pages ao repositório', () => {
     expect(projects[0].url).toBe('https://adsalesbrazil.com')
     expect(projects[1].url).toBe('https://ucatech.com.br')
     expect(projects[2].url).toBe('https://github.com/AlexSilva-dev/checkallpages')
-  })
-
-  it('SaaS de marketplaces não tem url pública', () => {
-    expect(projects[3].url).toBeUndefined()
   })
 
   it('conteúdo canônico não carrega texto de idioma, metadados vivem no dicionário', () => {
@@ -76,9 +71,9 @@ describe('dicionário projects', () => {
     expect(en.kicker).toBe('What I build on my own')
   })
 
-  it('traduz os 4 itens 1 para 1 entre pt e en', () => {
-    expect(pt.items).toHaveLength(4)
-    expect(en.items).toHaveLength(4)
+  it('traduz os 3 itens 1 para 1 entre pt e en', () => {
+    expect(pt.items).toHaveLength(3)
+    expect(en.items).toHaveLength(3)
     for (const item of [...pt.items, ...en.items]) {
       expect(Object.keys(item).sort()).toEqual([
         'badge',
@@ -97,7 +92,6 @@ describe('dicionário projects', () => {
       { papel: 'Sócio-fundador e responsável técnico', periodo: '2026 até hoje', time: 'AdSalesBrazil' },
       { papel: 'Idealizador e desenvolvedor solo', periodo: '2025 a 2026', time: 'Projeto pessoal' },
       { papel: 'Autor', periodo: '2025', time: 'Projeto pessoal' },
-      { papel: 'Idealizador', periodo: 'Em desenvolvimento', time: 'Projeto pessoal' },
     ])
   })
 
@@ -106,7 +100,6 @@ describe('dicionário projects', () => {
       { papel: 'Co-founder and technical lead', periodo: '2026 to today', time: 'AdSalesBrazil' },
       { papel: 'Creator and solo developer', periodo: '2025 to 2026', time: 'Personal project' },
       { papel: 'Author', periodo: '2025', time: 'Personal project' },
-      { papel: 'Creator', periodo: 'In development', time: 'Personal project' },
     ])
   })
 
@@ -115,13 +108,11 @@ describe('dicionário projects', () => {
       'CRM AdSalesBrazil',
       'UcaTech',
       'Check All Pages',
-      'SaaS de marketplaces',
     ])
     expect(pt.items.map((item) => item.badge)).toEqual([
       'Produto em produção',
       'Em desenvolvimento',
       'Ferramenta de linha de comando',
-      'Projeto próprio',
     ])
   })
 
@@ -130,13 +121,11 @@ describe('dicionário projects', () => {
       'CRM AdSalesBrazil',
       'UcaTech',
       'Check All Pages',
-      'Marketplace SaaS',
     ])
     expect(en.items.map((item) => item.badge)).toEqual([
       'Product in production',
       'In development',
       'Command line tool',
-      'Own project',
     ])
   })
 
@@ -145,13 +134,11 @@ describe('dicionário projects', () => {
       ['IA', 'Docker', 'Meta API'],
       ['Kotlin', 'Kotlin Multiplatform'],
       ['Kotlin', 'CLI', 'Lighthouse'],
-      ['IA', 'RAG'],
     ])
     expect(en.items.map((item) => item.chips)).toEqual([
       ['AI', 'Docker', 'Meta API'],
       ['Kotlin', 'Kotlin Multiplatform'],
       ['Kotlin', 'CLI', 'Lighthouse'],
-      ['AI', 'RAG'],
     ])
   })
 })
@@ -220,7 +207,7 @@ describe('preview dos projetos no conteúdo', () => {
         `preview do projeto ${i} não existe em app/assets/img`,
       ).toBe(true)
     })
-    expect(nomes.size, 'cada linha usa um preview distinto').toBe(4)
+    expect(nomes.size, 'cada linha usa um preview distinto').toBe(3)
   })
 })
 
@@ -244,12 +231,12 @@ describe('dicionário projects, labels editoriais', () => {
 
 function linhasRenderizadas(root: HTMLElement): HTMLElement[] {
   const linhas = [...root.querySelectorAll('[data-testid="project-row"]')]
-  expect(linhas, 'esperava 4 linhas renderizadas').toHaveLength(4)
+  expect(linhas, 'esperava 3 linhas renderizadas').toHaveLength(3)
   return linhas as HTMLElement[]
 }
 
 describe('ProjectRow, lista editorial', () => {
-  it('renderiza as 4 linhas com os nomes na ordem CRM, UcaTech, Check All Pages e SaaS', () => {
+  it('renderiza as 3 linhas com os nomes na ordem CRM, UcaTech e Check All Pages', () => {
     const { root, app } = montarLinhas()
     const nomes = linhasRenderizadas(root).map(
       (linha) => linha.querySelector('[data-testid="project-row-name"]')?.textContent?.trim(),
@@ -310,14 +297,6 @@ describe('ProjectRow, lista editorial', () => {
     app.unmount()
   })
 
-  it('linha sem url não renderiza rótulo de ação nenhum, o selo de status já comunica', () => {
-    const { root, app } = montarLinhas()
-    const saas = linhasRenderizadas(root)[3]
-    expect(saas.querySelector('[data-testid="project-row-cta"]'), 'cta fantasma no SaaS').toBeNull()
-    expect(saas.textContent).not.toContain(pt.verProjeto)
-    app.unmount()
-  })
-
   it('cada linha revela um preview de imagem em sobreposição', () => {
     const { root, app } = montarLinhas()
     linhasRenderizadas(root).forEach((linha, i) => {
@@ -361,24 +340,10 @@ describe('regra de link na lista editorial', () => {
     app.unmount()
   })
 
-  it('linha do SaaS não tem âncora nenhuma e mantém selo neutro de Projeto próprio', () => {
-    const { root, app } = montarLinhas()
-    const saas = linhasRenderizadas(root)[3]
-    expect(saas.tagName).toBe('ARTICLE')
-    expect(saas.querySelector('a')).toBeNull()
-    const selo = saas.querySelector('[data-testid="status-badge"]')
-    expect(selo, 'selo neutro ausente no SaaS').toBeTruthy()
-    expect(selo!.classList.contains('status-badge--neutral'), 'selo do SaaS deveria ser neutro').toBe(true)
-    expect(selo!.querySelector('.status-badge__dot'), 'dot ausente no selo do SaaS').toBeTruthy()
-    expect(selo!.textContent).toContain(pt.items[3].badge)
-    app.unmount()
-  })
-
-  it('UcaTech e SaaS carregam selo, CRM e Check All Pages são linhas limpas', () => {
+  it('UcaTech carrega selo, CRM e Check All Pages são linhas limpas', () => {
     const { root, app } = montarLinhas()
     const linhas = linhasRenderizadas(root)
     expect(linhas[1].querySelector('[data-testid="status-badge"]'), 'selo ausente no UcaTech').toBeTruthy()
-    expect(linhas[3].querySelector('[data-testid="status-badge"]'), 'selo ausente no SaaS').toBeTruthy()
     for (const i of [0, 2]) {
       expect(linhas[i].querySelector('[data-testid="status-badge"]'), `selo inesperado na linha ${i}`).toBeNull()
     }
@@ -728,18 +693,4 @@ describe('ProjectRow, preview perseguindo o cursor', () => {
     }
   })
 
-  it('linha sem url, o SaaS, mantém o preview neutro sem perseguição', () => {
-    stubMidia(true)
-    const quickToSpy = vi.spyOn(gsap, 'quickTo').mockImplementation(() => vi.fn() as never)
-    const toSpy = vi.spyOn(gsap, 'to').mockImplementation(() => undefined as never)
-
-    const { app, linha } = montarLinhaUnica(3)
-    linha.dispatchEvent(new MouseEvent('mouseenter', { clientX: 5000 }))
-    linha.dispatchEvent(new MouseEvent('mousemove', { clientX: 6000 }))
-
-    expect(quickToSpy).not.toHaveBeenCalled()
-    expect(toSpy).not.toHaveBeenCalled()
-
-    app.unmount()
-  })
 })

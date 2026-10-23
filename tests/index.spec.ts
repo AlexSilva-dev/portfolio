@@ -166,12 +166,14 @@ describe('Home — conteúdo das seções', () => {
     expect(grid?.textContent).toContain(dict.projects.items[0].papel)
   })
 
-  it('a linha do SaaS mantém o selo âmbar e sem âncora, regra preservada', () => {
+  it('a seção de projetos renderiza 3 linhas, todas com link externo', () => {
     const root = montar('pt')
-    const saas = root.querySelectorAll('#projetos [data-testid="project-row"]')[3]
-    expect(saas?.tagName).toBe('ARTICLE')
-    expect(saas?.querySelector('a')).toBeNull()
-    expect(saas?.querySelector('[data-testid="status-badge"]')).not.toBeNull()
+    const linhas = root.querySelectorAll('#projetos [data-testid="project-row"]')
+    expect(linhas).toHaveLength(3)
+    linhas.forEach((linha) => {
+      expect(linha.tagName).toBe('A')
+      expect(linha.getAttribute('target')).toBe('_blank')
+    })
   })
 
   it('skillset renderiza as 6 linhas numeradas na seção escura', () => {

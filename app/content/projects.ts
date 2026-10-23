@@ -1,7 +1,6 @@
 import previewCrm from '../assets/img/unify-eventos.webp'
 import previewUca from '../assets/img/mata-mosquisto.webp'
 import previewCap from '../assets/img/code.webp'
-import previewSaas from '../assets/img/alex-hero.jpg'
 
 export type ProjectStatus = 'production' | 'wip' | 'tool' | 'neutral'
 
@@ -16,7 +15,6 @@ export type Project = {
 /*
  * Ordem canônica da seção, em paralelo com items do dicionário
  * app/i18n/sections/projects.ts (mesma posição, mesmo projeto).
- * SaaS de marketplaces não tem url pública e a linha nasce só informativa.
  * UcaTech é o projeto em desenvolvimento e carrega o selo âmbar de wip.
  * Papel, período e time são texto de idioma e moram no dicionário, pt e en;
  * aqui fica só o dado canônico de idioma neutro. O ano é igual nos dois
@@ -44,11 +42,5 @@ export const projects: Project[] = [
     url: 'https://github.com/AlexSilva-dev/checkallpages',
     ano: '2025',
     preview: previewCap,
-  },
-  {
-    slug: 'saas-marketplaces',
-    status: 'neutral',
-    ano: '2026',
-    preview: previewSaas,
   },
 ]

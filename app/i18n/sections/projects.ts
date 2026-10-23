@@ -36,15 +36,6 @@ export const pt = {
       periodo: '2025',
       time: 'Projeto pessoal',
     },
-    {
-      name: 'SaaS de marketplaces',
-      badge: 'Projeto próprio',
-      summary: 'SaaS que conecta vendedores a Mercado Livre e Shopee, com IA e RAG no núcleo do produto.',
-      chips: ['IA', 'RAG'],
-      papel: 'Idealizador',
-      periodo: 'Em desenvolvimento',
-      time: 'Projeto pessoal',
-    },
   ],
 }
 
@@ -86,15 +77,6 @@ export const en: ProjectsDict = {
       chips: ['Kotlin', 'CLI', 'Lighthouse'],
       papel: 'Author',
       periodo: '2025',
-      time: 'Personal project',
-    },
-    {
-      name: 'Marketplace SaaS',
-      badge: 'Own project',
-      summary: 'SaaS connecting sellers to Mercado Livre and Shopee, with AI and RAG at the core of the product.',
-      chips: ['AI', 'RAG'],
-      papel: 'Creator',
-      periodo: 'In development',
       time: 'Personal project',
     },
   ],
