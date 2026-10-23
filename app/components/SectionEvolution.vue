@@ -1,8 +1,15 @@
 <script setup lang="ts">
 import gifAlex from '../assets/gifs/alex.gif'
+import { useParallax } from '../composables/useParallax'
+import { useTilt } from '../composables/useTilt'
 
 const { locale, dictionary } = useLocale()
 const paragrafo = computed(() => dictionary.value.sections.about.paragraphs[1])
+
+const polaroideEl = ref<HTMLElement | null>(null)
+// Parallax de scroll e tilt de ponteiro, ambos cortados com movimento reduzido
+useParallax(polaroideEl)
+useTilt(polaroideEl)
 
 // Alt descritivo por idioma, mesmo padrão de rótulos do SectionIntro
 const ALTS = {
@@ -16,7 +23,11 @@ const alt = computed(() => ALTS[locale.value] ?? ALTS.pt)
   <section id="sobre" class="evolucao" data-testid="section-evolution">
     <div class="evolucao__miolo">
       <p class="evolucao__texto" data-testid="evolution-texto">{{ paragrafo }}</p>
-      <figure class="evolucao__polaroide" data-testid="evolution-polaroide">
+      <figure
+        ref="polaroideEl"
+        class="evolucao__polaroide"
+        data-testid="evolution-polaroide"
+      >
         <img
           :src="gifAlex"
           :alt="alt"
@@ -55,15 +66,23 @@ const alt = computed(() => ALTS[locale.value] ?? ALTS.pt)
   max-width: 58rem;
 }
 
-/* Polaroid do GIF, moldura branca sobre papel sustentada pela sombra difusa */
+/* Polaroid do GIF, moldura branca sobre papel sustentada pela sombra difusa.
+   A variavel --polaroide-elevacao, de 0 a 1, e animada pelo tilt do ponteiro
+   e faz a sombra crescer junto com a inclinacao. */
 .evolucao__polaroide {
+  --polaroide-elevacao: 0;
   background: var(--color-paper);
   border: 1px solid color-mix(in srgb, var(--color-ink) 12%, transparent);
-  box-shadow: 0 18px 40px color-mix(in srgb, var(--color-ink) 18%, transparent);
+  box-shadow:
+    0
+    calc(18px + var(--polaroide-elevacao) * 12px)
+    calc(40px + var(--polaroide-elevacao) * 24px)
+    color-mix(in srgb, var(--color-ink) 18%, transparent);
   justify-self: center;
   margin: 0;
   padding: 0.75rem;
   transform: rotate(-6deg);
+  will-change: transform;
 }
 
 .evolucao__polaroide img {
