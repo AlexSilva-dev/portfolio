@@ -24,13 +24,13 @@ const TEXTO_JORNADA_PT =
   'Em três anos, saí do estágio pra referência técnica de um ERP em produção, cortei a inadimplência de 18% pra 7,5% recuperando R$ 15 mil por mês e coloquei IA pra resolver 80% do atendimento. Hoje sou sócio-fundador e responsável técnico da AdSalesBrazil, levando produto do zero à produção, do app Android ao backend.'
 
 const TEXTO_ORIGEM_PT =
-  'Comecei sozinho, construindo jogos e bots em casa muito antes de qualquer curso. Fui o primeiro da minha família a concluir o ensino médio e transformei essa curiosidade em profissão. De lá pra cá, foi entrega sobre entrega, do ERP ao CRM com IA homologada pela Meta.'
+  'Sempre fui fascinado por tecnologia, muito antes de saber que dava pra viver disso. Fui o primeiro da minha família a concluir o ensino médio e transformei esse interesse em profissão. De lá pra cá, foi entrega sobre entrega, do ERP ao CRM com IA homologada pela Meta.'
 
 const TEXTO_JORNADA_EN =
   'In three years, I went from intern to the technical reference of an ERP in production, cut delinquency from 18% to 7.5% recovering R$ 15 thousand a month, and put AI to work resolving 80% of support. Today I am co-founder and technical lead at AdSalesBrazil, taking product from zero to production, from the Android app to the backend.'
 
 const TEXTO_ORIGEM_EN =
-  'I started alone, building games and bots at home long before any course. I was the first in my family to finish high school and turned that curiosity into a profession. Since then, it has been delivery after delivery, from the ERP to the AI CRM homologated by Meta.'
+  'I have always been fascinated by technology, long before I knew I could make a living from it. I was the first in my family to finish high school and turned that interest into a profession. Since then, it has been delivery after delivery, from the ERP to the AI CRM homologated by Meta.'
 
 const DESCRICOES_SKILLSET_PT = [
   'apps multiplataforma da modelagem ao deploy',
@@ -67,8 +67,14 @@ describe('Sobre — conteúdo narrativo', () => {
     expect(aboutPt.paragraphs[0]).toBe(TEXTO_JORNADA_PT)
   })
 
-  it('parágrafo de origem conta o início cedo com jogos e bots e a entrega contínua até o CRM da Meta', () => {
+  it('parágrafo de origem conta a fascinação cedo pela tecnologia e a entrega contínua até o CRM da Meta', () => {
     expect(aboutPt.paragraphs[1]).toBe(TEXTO_ORIGEM_PT)
+  })
+
+  it('nenhum parágrafo afirma que o dono começou construindo jogos', () => {
+    for (const paragrafo of [...aboutPt.paragraphs, ...aboutEn.paragraphs]) {
+      expect(paragrafo).not.toMatch(/jogos|games/i)
+    }
   })
 
   it('usa título Sobre mim e kicker De onde eu venho', () => {

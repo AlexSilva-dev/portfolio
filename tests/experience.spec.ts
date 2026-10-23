@@ -59,6 +59,79 @@ describe('dicionário experience', () => {
     expect(metrica).toMatch(/7\.5/)
     expect(metrica).toMatch(/R\$\s*15\s*mil/)
   })
+
+  it('contagem fixa de conquistas por cargo, 5 na AdSalesBrazil, 4 na Ajax Hub e 5 na Tedsys, em pt e en', () => {
+    expect(pt.items.map((i) => i.achievements.length)).toEqual([5, 4, 5])
+    expect(en.items.map((i) => i.achievements.length)).toEqual([5, 4, 5])
+  })
+
+  it('AdSalesBrazil cobre arquitetura com Dokploy, homologação oficial da Meta, MCP de IA, full stack e rastreamento', () => {
+    const ads = pt.items[0]
+    const texto = ads.achievements.join(' ')
+    expect(texto).toMatch(/Dokploy/)
+    expect(texto).toMatch(/alta disponibilidade/)
+    expect(texto).toMatch(/custo baixo/)
+    expect(texto).toMatch(/homologação oficial da Meta/)
+    expect(texto).toMatch(/Instagram/)
+    expect(texto).toMatch(/WhatsApp Business/)
+    expect(texto).toMatch(/Meta Ads/)
+    expect(texto).toMatch(/MCP/)
+    expect(texto).toMatch(/IA agente/)
+    expect(texto).toMatch(/Nuxt/)
+    expect(texto).toMatch(/Rails/)
+    expect(texto).toMatch(/Meta Pixel/)
+    expect(texto).toMatch(/Core Web Vitals/)
+    expect(texto).toMatch(/agentes próprios/)
+    expect(ads.chips).toEqual(['Docker', 'Dokploy', 'Nuxt', 'Rails', 'Meta API', 'MCP', 'IA aplicada', 'GTM'])
+  })
+
+  it('Ajax Hub cobre separação em serviços, CI/CD com Easypanel, fluxos ágeis e 3 clientes pagantes', () => {
+    const ajax = pt.items[1]
+    const texto = ajax.achievements.join(' ')
+    expect(texto).toMatch(/serviços independentes/)
+    expect(texto).toMatch(/frontend/)
+    expect(texto).toMatch(/painel/)
+    expect(texto).toMatch(/GitHub Actions/)
+    expect(texto).toMatch(/Easypanel/)
+    expect(texto).toMatch(/isolamento de ambientes/)
+    expect(texto).toMatch(/previsibilidade/)
+    expect(texto).toMatch(/três clientes pagantes/)
+    expect(ajax.chips).toEqual(['GitHub Actions', 'Easypanel', 'Docker', 'CI/CD', 'arquitetura em serviços'])
+  })
+
+  it('Tedsys cobre inadimplência com horas liberadas, n8n com RAG e OCR, ERP Laminas Firebird, Bitrix e Jira e AWS', () => {
+    const tedsys = pt.items[2]
+    const texto = tedsys.achievements.join(' ')
+    expect(texto).toMatch(/5 a 6 horas/)
+    expect(texto).toMatch(/n8n/)
+    expect(texto).toMatch(/RAG/)
+    expect(texto).toMatch(/OCR/)
+    expect(texto).toMatch(/Laminas/)
+    expect(texto).toMatch(/APIs REST/)
+    expect(texto).toMatch(/Firebird/)
+    expect(texto).toMatch(/Vue 3/)
+    expect(texto).toMatch(/Bitrix/)
+    expect(texto).toMatch(/Jira/)
+    expect(texto).toMatch(/AWS/)
+    expect(texto).toMatch(/EC2/)
+    expect(texto).toMatch(/Route 53/)
+    expect(tedsys.chips).toEqual(['PHP', 'Laminas', 'Vue 3', 'Firebird', 'n8n', 'RAG', 'OCR', 'Bitrix', 'Jira', 'AWS'])
+  })
+
+  it('en espelha a riqueza com os chips traduzidos por cargo', () => {
+    expect(en.items[0].chips).toEqual(['Docker', 'Dokploy', 'Nuxt', 'Rails', 'Meta API', 'MCP', 'Applied AI', 'GTM'])
+    expect(en.items[1].chips).toEqual(['GitHub Actions', 'Easypanel', 'Docker', 'CI/CD', 'service architecture'])
+    expect(en.items[2].chips).toEqual(['PHP', 'Laminas', 'Vue 3', 'Firebird', 'n8n', 'RAG', 'OCR', 'Bitrix', 'Jira', 'AWS'])
+  })
+
+  it('nenhuma conquista usa dois-pontos, ponto e vírgula ou sinal de mais', () => {
+    for (const item of [...pt.items, ...en.items]) {
+      for (const conquista of item.achievements) {
+        expect(conquista).not.toMatch(/[:;+]/)
+        expect(conquista.trim()).toBe(conquista)
+      }
+    }
+  })
 })
 
 describe('SectionHeading', () => {

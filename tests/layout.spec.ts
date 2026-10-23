@@ -94,11 +94,15 @@ describe('dicionário layout', () => {
 })
 
 describe('módulo experience', () => {
-  it('chip de IA da Tedsys vira AI na tradução en', () => {
-    const tedsys = layoutEn && getDictionary('en').sections.experience.items.find(
+  it('chips da Tedsys carregam a stack completa e espelham pt na tradução en', () => {
+    const tedsysEn = getDictionary('en').sections.experience.items.find(
       (i) => i.company === 'Tedsys',
     )
-    expect(tedsys?.chips).toEqual(['PHP', 'Vue 3', 'AI'])
+    const tedsysPt = getDictionary('pt').sections.experience.items.find(
+      (i) => i.company === 'Tedsys',
+    )
+    expect(tedsysEn?.chips).toEqual(['PHP', 'Laminas', 'Vue 3', 'Firebird', 'n8n', 'RAG', 'OCR', 'Bitrix', 'Jira', 'AWS'])
+    expect(tedsysEn?.chips).toEqual(tedsysPt?.chips)
   })
 })
 
