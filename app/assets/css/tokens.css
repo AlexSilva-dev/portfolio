@@ -5,7 +5,8 @@
  * passar 4,5 sobre o papel, medido 5,24).
  * Área escura, seções de impacto: navy herdado com o violeta claro
  * 8B7A9F extraído do rim light de Minha-foto.jpg (medido 4,85 sobre o
- * navy). Nenhum hex fora deste arquivo.
+ * navy). Void 0A0A0A é o preto puro dos blocos full-bleed, skillset,
+ * contato e rodapé. Nenhum hex fora deste arquivo.
  */
 :root {
   /* Área papel (default) */
@@ -15,6 +16,7 @@
   /* Área escura */
   --color-bg: #0B1020;
   --color-surface: #151C30;
+  --color-void: #0A0A0A;
   --color-text: #E9ECF5;
   --color-text-muted: #A9B1C6;
   --color-accent: #8B7A9F;

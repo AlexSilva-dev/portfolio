@@ -94,21 +94,36 @@ const { copied, copyEmail } = useCopyEmail(EMAIL)
 <style scoped>
 /* Fundo escuro da seção sobrepõe o anel de foco pro tom claro da área
    escura (base.css, tokens da change), tinta de cartão herda o anel */
+/* Full-bleed, escapa do main.container do layout atravessando a viewport,
+   fundo vivo com câmera lenta em loop (barato, sem gif) */
 .contato {
   --focus-ring: 2px solid var(--color-accent);
 
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin-inline: calc(50% - 50vw);
+  min-height: clamp(32rem, 90svh, 60rem);
   overflow: hidden;
   padding-block: clamp(6rem, 12vw, 10rem);
   padding-inline: 1.5rem;
   position: relative;
+  width: 100vw;
 }
 
 .contato__bg {
+  animation: contato-camera 16s ease-in-out alternate infinite;
   height: 100%;
   inset: 0;
   object-fit: cover;
   position: absolute;
   width: 100%;
+}
+
+@keyframes contato-camera {
+  from { transform: scale(1) translate(0, 0); }
+  to { transform: scale(1.12) translate(2%, -2%); }
 }
 
 .contato__veu {
@@ -250,5 +265,9 @@ const { copied, copyEmail } = useCopyEmail(EMAIL)
   .contato__cartao {
     width: 100%;
   }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .contato__bg { animation: none; }
 }
 </style>

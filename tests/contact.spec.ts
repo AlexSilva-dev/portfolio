@@ -343,6 +343,32 @@ describe('ContactSection', () => {
   })
 })
 
+describe('ContactSection (CSS editorial)', () => {
+  it('seção full-bleed, atravessa a viewport inteira com altura generosa', () => {
+    const regra = fonteContact.match(/\.contato\s*\{([^}]*)\}/)?.[1] ?? ''
+    expect(regra).toContain('width: 100vw')
+    expect(regra).toMatch(/margin(-inline|-left)?:\s*calc\(50% - 50vw\)/)
+    expect(regra).toMatch(/min-height:\s*clamp\(/)
+  })
+
+  it('fundo é vivo, câmera em pan e zoom lento em loop alternado', () => {
+    const bg = fonteContact.match(/\.contato__bg\s*\{([^}]*)\}/)?.[1] ?? ''
+    expect(bg).toMatch(
+      /animation:\s*contato-camera\s+1[4-8]s\s+ease-in-out\s+alternate\s+infinite/,
+    )
+    const keyframes = fonteContact.match(/@keyframes contato-camera\s*\{([\s\S]*?)\n\}/)?.[1] ?? ''
+    expect(keyframes).toContain('scale(1)')
+    expect(keyframes).toContain('scale(1.12)')
+    expect(keyframes).toMatch(/translate\(/)
+  })
+
+  it('reduced motion deixa a imagem de fundo parada', () => {
+    const reduzido =
+      fonteContact.match(/@media \(prefers-reduced-motion: reduce\)\s*\{([\s\S]*?)\n\}/)?.[1] ?? ''
+    expect(reduzido).toMatch(/\.contato__bg\s*\{[^}]*animation:\s*none/)
+  })
+})
+
 describe('SiteFooter wordmark', () => {
   it('wordmark ALEX ALVES é decorativo aria-hidden e o copyright legível vem do dicionário', () => {
     const { root, app } = montar(SiteFooter)

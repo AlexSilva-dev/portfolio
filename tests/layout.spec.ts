@@ -181,6 +181,29 @@ describe('SiteHeader (CSS editorial)', () => {
   })
 })
 
+describe('SiteFooter (CSS editorial)', () => {
+  const fonte = readFileSync(
+    join(import.meta.dirname, '..', 'app', 'components', 'SiteFooter.vue'),
+    'utf-8',
+  )
+
+  it('rodapé é seção preta com o token void, wordmark em papel e copyright claro', () => {
+    const rodape = fonte.match(/\.site-footer\s*\{([^}]*)\}/)?.[1] ?? ''
+    expect(rodape).toContain('background: var(--color-void)')
+    expect(rodape).toMatch(/--focus-ring:\s*2px solid var\(--color-accent\)/)
+    const wordmark = fonte.match(/\.site-footer__wordmark\s*\{([^}]*)\}/)?.[1] ?? ''
+    expect(wordmark).toContain('color: var(--color-paper)')
+    const texto = fonte.match(/\.site-footer__texto\s*\{([^}]*)\}/)?.[1] ?? ''
+    expect(texto).toContain('color: var(--color-text-muted)')
+  })
+
+  it('borda de topo em tom claro sutil e nenhum hex cru no componente', () => {
+    const rodape = fonte.match(/\.site-footer\s*\{([^}]*)\}/)?.[1] ?? ''
+    expect(rodape).toMatch(/border-top:\s*1px solid color-mix\(in srgb, var\(--color-text\)/)
+    expect(fonte).not.toMatch(/#[0-9a-fA-F]{3,8}\b/)
+  })
+})
+
 describe('SiteFooter', () => {
   function montar() {
     const raiz = document.createElement('div')

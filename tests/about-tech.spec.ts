@@ -231,10 +231,42 @@ describe('SkillsetSection (componente)', () => {
 describe('SkillsetSection (CSS editorial)', () => {
   const caminho = join(import.meta.dirname, '..', 'app', 'components', 'SkillsetSection.vue')
   const css = readFileSync(caminho, 'utf-8')
+  const tokens = readFileSync(
+    join(import.meta.dirname, '..', 'app', 'assets', 'css', 'tokens.css'),
+    'utf-8',
+  )
 
-  it('seção de impacto usa o navy do token da área escura, sem hex no componente', () => {
-    expect(css).toMatch(/\.skillset\s*\{[^}]*background:\s*var\(--color-bg\)/)
+  it('token void define o preto puro da área escura', () => {
+    expect(tokens).toMatch(/--color-void:\s*#0A0A0A/)
+  })
+
+  it('seção de impacto usa o preto puro do token void, sem hex no componente', () => {
+    expect(css).toMatch(/\.skillset\s*\{[^}]*background:\s*var\(--color-void\)/)
     expect(css).not.toMatch(/#[0-9a-fA-F]{3,8}\b/)
+  })
+
+  it('seção é full-bleed, linhas atravessam a viewport sem container interno', () => {
+    expect(css).not.toContain('class="container"')
+    const regra = css.match(/\.skillset\s*\{([^}]*)\}/)?.[1] ?? ''
+    expect(regra).toContain('width: 100vw')
+    expect(regra).toMatch(/margin(-inline|-left)?:\s*calc\(50% - 50vw\)/)
+    expect(regra).toMatch(/padding-inline:\s*clamp\(/)
+  })
+
+  it('linha ativa expande de altura com transição e a descrição acende junto', () => {
+    const linha = css.match(/\.skillset__linha\s*\{([^}]*)\}/)?.[1] ?? ''
+    expect(linha).toMatch(/transition:\s*padding-block/)
+    const blocoHover = css.match(/@media \(hover: hover\)\s*\{([\s\S]*?)\n\}/)?.[1] ?? ''
+    expect(blocoHover).toMatch(/\.skillset__linha--ativa\s*\{[^}]*padding-block:/)
+    expect(blocoHover).toMatch(
+      /\.skillset__linha--ativa [^{]*\.skillset__descricao[^{]*\{[^}]*color:\s*var\(--color-text\)/,
+    )
+  })
+
+  it('reduced motion congela a expansão da linha', () => {
+    const reduzido =
+      css.match(/@media \(prefers-reduced-motion: reduce\)\s*\{([\s\S]*?)\n\}/)?.[1] ?? ''
+    expect(reduzido).toMatch(/\.skillset__linha\s*\{[^}]*transition:\s*none/)
   })
 
   it('linhas nascem acesas pra leitura sem hover e o estado apagado existe só onde há hover', () => {
@@ -251,9 +283,12 @@ describe('SkillsetSection (CSS editorial)', () => {
     expect(blocoHover).toMatch(/\.skillset__linha--ativa [^{]*\.skillset__numero[^{]*\{[^}]*var\(--color-accent\)/)
   })
 
-  it('imagem decorativa é absoluta, sem empurrar o layout', () => {
+  it('imagem decorativa é absoluta e sobrepõe as linhas vizinhas sem clip', () => {
     const regra = css.match(/\.skillset__imagem\s*\{([^}]*)\}/)?.[1] ?? ''
     expect(regra).toContain('position: absolute')
     expect(regra).toContain('pointer-events: none')
+    expect(regra).toMatch(/z-index:\s*[1-9]/)
+    expect(css).not.toMatch(/\.skillset\s*\{[^}]*overflow:\s*hidden/)
+    expect(css).not.toMatch(/\.skillset__linha\s*\{[^}]*overflow:\s*hidden/)
   })
 })

@@ -17,14 +17,19 @@ const layout = computed(() => dictionary.value.sections.layout)
 </template>
 
 <style scoped>
+/* Rodapé na área escura, preto puro do void com anel de foco claro
+   (mesma sobreposição da seção de contato) */
 .site-footer {
-  border-top: 1px solid var(--color-surface);
+  --focus-ring: 2px solid var(--color-accent);
+
+  background: var(--color-void);
+  border-top: 1px solid color-mix(in srgb, var(--color-text) 20%, transparent);
   overflow: hidden;
   padding: 2rem 1.5rem;
 }
 
 .site-footer__wordmark {
-  color: var(--color-ink);
+  color: var(--color-paper);
   font-size: clamp(2.5rem, 15vw, 16rem);
   font-weight: 800;
   letter-spacing: -0.02em;
@@ -34,7 +39,7 @@ const layout = computed(() => dictionary.value.sections.layout)
 }
 
 .site-footer__texto {
-  color: var(--color-ink);
+  color: var(--color-text-muted);
   font-family: var(--font-mono);
   font-size: 0.875rem;
   text-align: center;

@@ -32,43 +32,46 @@ function apagar() {
 
 <template>
   <section id="skillset" class="skillset" data-testid="skillset-section">
-    <div class="container">
-      <h2 class="skillset__titulo" data-testid="skillset-title">{{ tech.heading }}</h2>
-      <ol class="skillset__lista">
-        <li
-          v-for="(grupo, indice) in tech.groups"
-          :key="grupo.label"
-          class="skillset__linha"
-          :class="{ 'skillset__linha--ativa': indice === ativa }"
-          data-testid="skillset-row"
-          @mouseenter="acender(indice)"
-          @mouseleave="apagar"
-        >
-          <span class="skillset__numero" data-testid="skillset-number">{{ NUMEROS[indice] }}</span>
-          <h3 class="skillset__nome" data-testid="skillset-name">{{ grupo.label }}</h3>
-          <p class="skillset__descricao" data-testid="skillset-description">
-            {{ grupo.description }}
-          </p>
-          <img
-            v-if="indice === ativa"
-            :src="IMAGENS_POR_FRENTE[indice]"
-            alt=""
-            aria-hidden="true"
-            decoding="async"
-            class="skillset__imagem"
-            data-testid="skillset-image"
-          />
-        </li>
-      </ol>
-    </div>
+    <h2 class="skillset__titulo" data-testid="skillset-title">{{ tech.heading }}</h2>
+    <ol class="skillset__lista">
+      <li
+        v-for="(grupo, indice) in tech.groups"
+        :key="grupo.label"
+        class="skillset__linha"
+        :class="{ 'skillset__linha--ativa': indice === ativa }"
+        data-testid="skillset-row"
+        @mouseenter="acender(indice)"
+        @mouseleave="apagar"
+      >
+        <span class="skillset__numero" data-testid="skillset-number">{{ NUMEROS[indice] }}</span>
+        <h3 class="skillset__nome" data-testid="skillset-name">{{ grupo.label }}</h3>
+        <p class="skillset__descricao" data-testid="skillset-description">
+          {{ grupo.description }}
+        </p>
+        <img
+          v-if="indice === ativa"
+          :src="IMAGENS_POR_FRENTE[indice]"
+          alt=""
+          aria-hidden="true"
+          decoding="async"
+          class="skillset__imagem"
+          data-testid="skillset-image"
+        />
+      </li>
+    </ol>
   </section>
 </template>
 
 <style scoped>
+/* Full-bleed, escapa do main.container do layout atravessando a viewport,
+   linhas 01 a 06 de borda a borda com padding lateral generoso */
 .skillset {
-  background: var(--color-bg);
+  background: var(--color-void);
   color: var(--color-text);
+  margin-inline: calc(50% - 50vw);
   padding-block: var(--space-section);
+  padding-inline: clamp(1.5rem, 6vw, 6rem);
+  width: 100vw;
 }
 
 .skillset__titulo {
@@ -97,6 +100,7 @@ function apagar() {
   grid-template-columns: 3.5rem 1fr minmax(0, 22rem);
   padding-block: clamp(1.25rem, 2vw, 2rem);
   position: relative;
+  transition: padding-block 0.35s ease;
 }
 
 .skillset__numero {
@@ -147,7 +151,13 @@ function apagar() {
 @media (hover: hover) {
   .skillset__linha .skillset__nome { color: var(--color-text-muted); }
   .skillset__linha .skillset__numero { color: var(--color-text-muted); }
+  .skillset__linha--ativa { padding-block: clamp(2rem, 3.5vw, 3.5rem); }
   .skillset__linha--ativa .skillset__nome { color: var(--color-text); }
   .skillset__linha--ativa .skillset__numero { color: var(--color-accent); }
+  .skillset__linha--ativa .skillset__descricao { color: var(--color-text); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skillset__linha { transition: none; }
 }
 </style>
