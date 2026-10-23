@@ -9,10 +9,12 @@ import iconeSpring from '../assets/icons/icons8-spring-boot-48.png'
 import iconeVue from '../assets/icons/icons8-vue-js-96.png'
 import { useImageTrail } from '../composables/useImageTrail'
 import { useMagnetic } from '../composables/useMagnetic'
+import { useEntradaHero } from '../composables/useEntradaHero'
 
 const { dictionary } = useLocale()
 const hero = computed(() => dictionary.value.sections.hero)
 
+const raizEl = ref<HTMLElement | null>(null)
 const fotoEl = ref<HTMLElement | null>(null)
 const ctaPrimariaEl = ref<HTMLElement | null>(null)
 const ctaSecundariaEl = ref<HTMLElement | null>(null)
@@ -33,10 +35,11 @@ const itensTrilha = ICONES_TRAIL.map((src) => ({ src }))
 useImageTrail(fotoEl, itensTrilha)
 useMagnetic(ctaPrimariaEl)
 useMagnetic(ctaSecundariaEl)
+useEntradaHero(raizEl)
 </script>
 
 <template>
-  <section id="hero" class="hero" data-testid="hero">
+  <section id="hero" ref="raizEl" class="hero" data-testid="hero">
     <header class="hero__cabecalho">
       <p class="hero__wordmark" data-testid="hero-wordmark">Alex Alves</p>
     </header>
@@ -51,8 +54,8 @@ useMagnetic(ctaSecundariaEl)
           </p>
         </div>
         <h1 class="hero__titulo" data-testid="hero-title">
-          <span class="hero__titulo-linha">Alex</span>
-          <span class="hero__titulo-linha">Alves</span>
+          <span class="hero__titulo-linha"><span class="hero__titulo-texto">Alex</span></span>
+          <span class="hero__titulo-linha"><span class="hero__titulo-texto">Alves</span></span>
         </h1>
         <ul class="hero__chips" data-testid="hero-chips">
           <li
@@ -220,6 +223,13 @@ useMagnetic(ctaSecundariaEl)
 
 .hero__titulo-linha {
   display: block;
+  /* Máscara de linha da coreografia de entrada, o corte esconde o texto
+     enquanto ele sobe de translateY 110% pra 0, escondido só pelo JS */
+  overflow: hidden;
+}
+
+.hero__titulo-texto {
+  display: inline-block;
 }
 
 .hero__chips {

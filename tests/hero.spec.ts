@@ -1,6 +1,6 @@
 import { join } from 'node:path'
 import { readFileSync, statSync } from 'node:fs'
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
 import { createApp, h } from 'vue'
 import { gsap } from 'gsap'
 
@@ -465,5 +465,283 @@ describe('HeroSection recorte e rastro de ícones', () => {
     )
     const foto = css.match(/\.hero__foto\s*\{([^}]*)\}/)?.[1] ?? ''
     expect(foto).toMatch(/position:\s*relative/)
+  })
+})
+
+describe('coreografia de entrada do hero', () => {
+  type HeroEntrada = typeof import('../app/utils/heroEntrada')
+  let heroEntrada: HeroEntrada
+
+  beforeAll(async () => {
+    heroEntrada = await import('../app/utils/heroEntrada')
+  })
+
+  describe('decomporValorStat', () => {
+    it('separa R$ 15 mil em prefixo, número e sufixo', () => {
+      expect(heroEntrada.decomporValorStat('R$ 15 mil')).toEqual({
+        prefixo: 'R$ ',
+        numero: 15,
+        sufixo: ' mil',
+      })
+    })
+
+    it('separa 80% e 3+ sem prefixo', () => {
+      expect(heroEntrada.decomporValorStat('80%')).toEqual({ prefixo: '', numero: 80, sufixo: '%' })
+      expect(heroEntrada.decomporValorStat('3+')).toEqual({ prefixo: '', numero: 3, sufixo: '+' })
+    })
+
+    it('string sem número devolve null e o texto fica estático', () => {
+      expect(heroEntrada.decomporValorStat('sem número')).toBeNull()
+    })
+  })
+
+  describe('valorContado', () => {
+    it('começa no valor inicial no tempo zero', () => {
+      expect(heroEntrada.valorContado(0, { ate: 15, duracaoMs: 1200 })).toBe(0)
+    })
+
+    it('termina no valor final quando o tempo atinge a duração', () => {
+      expect(heroEntrada.valorContado(1200, { ate: 15, duracaoMs: 1200 })).toBe(15)
+      expect(heroEntrada.valorContado(9999, { ate: 80, duracaoMs: 1200 })).toBe(80)
+    })
+
+    it('easing linear passa pelo meio do caminho', () => {
+      expect(heroEntrada.valorContado(600, { ate: 80, duracaoMs: 1200, easing: (t) => t })).toBe(40)
+    })
+
+    it('respeita valor inicial diferente de zero com linear', () => {
+      expect(
+        heroEntrada.valorContado(1000, { de: 10, ate: 20, duracaoMs: 1000, easing: (t) => t }),
+      ).toBe(20)
+    })
+
+    it('easeOutExpo sai de 0, chega em 1 e é monotônico crescente', () => {
+      expect(heroEntrada.easeOutExpo(0)).toBe(0)
+      expect(heroEntrada.easeOutExpo(1)).toBe(1)
+      let anterior = 0
+      for (let i = 1; i <= 10; i += 1) {
+        const valor = heroEntrada.easeOutExpo(i / 10)
+        expect(valor).toBeGreaterThanOrEqual(anterior)
+        anterior = valor
+      }
+    })
+
+    it('tempo NaN conta como zero e duração inválida lança RangeError', () => {
+      expect(heroEntrada.valorContado(Number.NaN, { ate: 15, duracaoMs: 1200 })).toBe(0)
+      expect(() => heroEntrada.valorContado(0, { ate: 15, duracaoMs: 0 })).toThrow(RangeError)
+    })
+  })
+
+  describe('formatarContado', () => {
+    it('monta o valor com o sufixo e prefixo informados por idioma', () => {
+      expect(heroEntrada.formatarContado(15, { prefixo: 'R$ ', sufixo: ' mil' })).toBe('R$ 15 mil')
+      expect(heroEntrada.formatarContado(80, { sufixo: '%' })).toBe('80%')
+      expect(heroEntrada.formatarContado(3, { sufixo: '+' })).toBe('3+')
+    })
+
+    it('arredonda por padrão e aceita casas decimais', () => {
+      expect(heroEntrada.formatarContado(14.7, { sufixo: ' mil' })).toBe('15 mil')
+      expect(heroEntrada.formatarContado(2.5, { casas: 1 })).toBe('2,5')
+    })
+  })
+
+  describe('construirCoreografiaEntrada', () => {
+    it('movimento reduzido corta tudo, nenhum passo', () => {
+      expect(heroEntrada.construirCoreografiaEntrada(true)).toEqual([])
+    })
+
+    it('ordem editorial nome, foto, chips, stats e fecho', () => {
+      const passos = heroEntrada.construirCoreografiaEntrada(false)
+      expect(passos.map((p) => p.alvo)).toEqual([
+        'linha-nome',
+        'foto',
+        'chip',
+        'stats',
+        'fecho',
+      ])
+    })
+
+    it('nome abre em zero com stagger de 0,08 entre linhas e ease expo', () => {
+      const [nome] = heroEntrada.construirCoreografiaEntrada(false)
+      expect(nome.inicioS).toBe(0)
+      expect(nome.staggerS).toBeCloseTo(0.08)
+      expect(nome.ease).toContain('expo')
+    })
+
+    it('foto entra 0,15 depois do nome com duração positiva', () => {
+      const [, foto] = heroEntrada.construirCoreografiaEntrada(false)
+      expect(foto.inicioS).toBeCloseTo(0.15)
+      expect(foto.duracaoS).toBeGreaterThan(0)
+    })
+
+    it('chips entram em pop com stagger de 0,05 e ease back', () => {
+      const [, , chip] = heroEntrada.construirCoreografiaEntrada(false)
+      expect(chip.staggerS).toBeCloseTo(0.05)
+      expect(chip.ease).toContain('back')
+    })
+
+    it('contagem dos stats dura o mesmo que DURACAO_CONTAGEM_MS', () => {
+      const [, , , stats] = heroEntrada.construirCoreografiaEntrada(false)
+      expect(stats.duracaoS).toBe(heroEntrada.DURACAO_CONTAGEM_MS / 1000)
+    })
+
+    it('fecho é o último passo da coreografia', () => {
+      const passos = heroEntrada.construirCoreografiaEntrada(false)
+      const fecho = passos.at(-1)!
+      for (const passo of passos.slice(0, -1)) {
+        expect(fecho.inicioS).toBeGreaterThanOrEqual(passo.inicioS)
+      }
+      expect(fecho.alvo).toBe('fecho')
+    })
+  })
+
+  describe('observarSaidaPreloader', () => {
+    function criarPreloader() {
+      const preloader = document.createElement('div')
+      preloader.setAttribute('data-testid', 'preloader')
+      document.body.appendChild(preloader)
+      return preloader
+    }
+
+    afterEach(() => {
+      document.body.innerHTML = ''
+    })
+
+    it('sem preloader em cena devolve jaSaiu true e não chama callback', () => {
+      const aoSair = vi.fn()
+      const { jaSaiu, cancelar } = heroEntrada.observarSaidaPreloader(document, aoSair)
+      expect(jaSaiu).toBe(true)
+      expect(aoSair).not.toHaveBeenCalled()
+      cancelar()
+    })
+
+    it('com preloader em cena espera a saída e dispara uma vez só', async () => {
+      const preloader = criarPreloader()
+      const aoSair = vi.fn()
+      const { jaSaiu } = heroEntrada.observarSaidaPreloader(document, aoSair)
+      expect(jaSaiu).toBe(false)
+
+      preloader.remove()
+      await new Promise((resolve) => setTimeout(resolve, 0))
+      expect(aoSair).toHaveBeenCalledTimes(1)
+
+      document.body.appendChild(preloader)
+      preloader.remove()
+      await new Promise((resolve) => setTimeout(resolve, 0))
+      expect(aoSair).toHaveBeenCalledTimes(1)
+    })
+
+    it('cancelar impede o disparo depois', async () => {
+      const preloader = criarPreloader()
+      const aoSair = vi.fn()
+      const { cancelar } = heroEntrada.observarSaidaPreloader(document, aoSair)
+      cancelar()
+      preloader.remove()
+      await new Promise((resolve) => setTimeout(resolve, 0))
+      expect(aoSair).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('HeroSection na cena', () => {
+    const cssHero = readFileSync(
+      join(import.meta.dirname, '..', 'app', 'components', 'HeroSection.vue'),
+      'utf-8',
+    )
+
+    class FakeMediaQueryList {
+      matches = false
+      private listeners = new Set<() => void>()
+
+      addEventListener(_type: string, listener: () => void) {
+        this.listeners.add(listener)
+      }
+
+      removeEventListener(_type: string, listener: () => void) {
+        this.listeners.delete(listener)
+      }
+    }
+
+    function montarHero(ponteiroFino: boolean, movimentoReduzido: boolean) {
+      const criar = (query: string) => {
+        const lista = new FakeMediaQueryList()
+        lista.matches = query.includes('pointer') ? ponteiroFino : movimentoReduzido
+        return lista
+      }
+      vi.stubGlobal('matchMedia', vi.fn((query: string) => criar(query)))
+      const { locale: localeRef } = useLocale()
+      localeRef.value = 'pt'
+      setLocaleMock.mockClear()
+      const root = document.createElement('div')
+      document.body.appendChild(root)
+      const app = createApp(HeroSection)
+      app.mount(root)
+      return { root, app }
+    }
+
+    afterEach(() => {
+      vi.unstubAllGlobals()
+      document.body.innerHTML = ''
+    })
+
+    it('cada linha do display tem máscara com o texto interno pronto pra subir', () => {
+      const { root } = montarHero(true, true)
+      const linhas = [...root.querySelectorAll('.hero__titulo-linha')]
+      expect(linhas).toHaveLength(2)
+      for (const linha of linhas) {
+        expect(linha.querySelector('.hero__titulo-texto')).not.toBeNull()
+      }
+      const mascara = cssHero.match(/\.hero__titulo-linha\s*\{([^}]*)\}/)?.[1] ?? ''
+      expect(mascara).toMatch(/overflow:\s*hidden/)
+    })
+
+    it('estado inicial escondido nasce do JS, nunca do CSS', () => {
+      const { root } = montarHero(true, false)
+      const textos = [...root.querySelectorAll('.hero__titulo-texto')] as HTMLElement[]
+      expect(textos.length).toBeGreaterThan(0)
+      expect(textos.every((el) => el.style.transform.includes('translate'))).toBe(true)
+
+      const foto = root.querySelector('[data-testid="hero-photo-container"]') as HTMLElement
+      expect(foto.style.transform).toContain('scale')
+      expect(foto.style.opacity).toBe('0')
+
+      const chips = [...root.querySelectorAll('[data-testid="hero-chip"]')] as HTMLElement[]
+      expect(chips.every((el) => el.style.transform.includes('scale'))).toBe(true)
+
+      const sub = root.querySelector('[data-testid="hero-sub"]') as HTMLElement
+      expect(sub.style.opacity).toBe('0')
+
+      const seletoresCoreografados =
+        /\.hero__(titulo-texto|foto|chip|sub|cta)\b[^{]*\{[^}]*opacity:\s*0/
+      expect(cssHero).not.toMatch(seletoresCoreografados)
+    })
+
+    it('movimento reduzido não aplica nenhum estado inicial, tudo posicionado', () => {
+      const { root } = montarHero(true, true)
+      const textos = [...root.querySelectorAll('.hero__titulo-texto')] as HTMLElement[]
+      expect(textos.every((el) => el.style.transform === '')).toBe(true)
+      const foto = root.querySelector('[data-testid="hero-photo-container"]') as HTMLElement
+      expect(foto.style.transform).toBe('')
+      expect(foto.style.opacity).toBe('')
+      const chips = [...root.querySelectorAll('[data-testid="hero-chip"]')] as HTMLElement[]
+      expect(chips.every((el) => el.style.transform === '')).toBe(true)
+      const sub = root.querySelector('[data-testid="hero-sub"]') as HTMLElement
+      expect(sub.style.opacity).toBe('')
+    })
+
+    it('valores finais dos stats no DOM antes de qualquer contagem', () => {
+      const { root } = montarHero(true, false)
+      const valores = [...root.querySelectorAll('[data-testid="stat-valor"]')].map(
+        (el) => el.textContent,
+      )
+      expect(valores).toEqual(['R$ 15 mil', '80%', '3+'])
+    })
+
+    it('revert no unmount devolve os estilos inline ao estado original', () => {
+      const { root, app } = montarHero(true, false)
+      const texto = root.querySelector('.hero__titulo-texto') as HTMLElement
+      expect(texto.style.transform).not.toBe('')
+      app.unmount()
+      expect(texto.style.transform).toBe('')
+    })
   })
 })
