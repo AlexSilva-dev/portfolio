@@ -1,7 +1,4 @@
 <script setup lang="ts">
-import fotoCodigo from '../assets/img/code.webp'
-import fotoTelaCodigo from '../assets/img/2560x1600-px-code-coding-computer-Computer-screen-Java-1288551-wallhere.com.jpg'
-import fotoAppEventos from '../assets/img/unify-eventos.webp'
 import iconeKotlin from '../assets/icons/icons8-kotlin-96.png'
 import iconeVue from '../assets/icons/icons8-vue-js-96.png'
 import iconeJs from '../assets/icons/icons8-javascript-48.png'
@@ -15,16 +12,6 @@ const tech = computed(() => dictionary.value.sections.tech)
 
 // Linha sob o cursor, null com o cursor fora da lista
 const ativa = ref<number | null>(null)
-
-// Assets próprios, 1 por frente, puramente decorativos e já no bundle
-const IMAGENS_POR_FRENTE = [
-  fotoAppEventos,
-  fotoCodigo,
-  fotoTelaCodigo,
-  fotoCodigo,
-  fotoTelaCodigo,
-  fotoCodigo,
-]
 
 // Ícones de tecnologia por frente, decorativos, junto ao nome da linha.
 // 04 IA aplicada, 05 Infra e deploy e 06 Práticas não têm ícone no acervo
@@ -84,15 +71,6 @@ function apagar() {
         <p class="skillset__descricao" data-testid="skillset-description">
           {{ grupo.description }}
         </p>
-        <img
-          v-if="indice === ativa"
-          :src="IMAGENS_POR_FRENTE[indice]"
-          alt=""
-          aria-hidden="true"
-          decoding="async"
-          class="skillset__imagem"
-          data-testid="skillset-image"
-        />
       </li>
     </ol>
   </section>
@@ -176,18 +154,6 @@ function apagar() {
   line-height: 1.5;
   margin: 0;
   text-align: right;
-}
-
-.skillset__imagem {
-  height: 9rem;
-  object-fit: cover;
-  pointer-events: none;
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 16rem;
-  z-index: 1;
 }
 
 @media (max-width: 767px) {

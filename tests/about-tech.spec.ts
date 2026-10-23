@@ -203,32 +203,29 @@ describe('SkillsetSection (componente)', () => {
     expect(linhas[2].classList.contains('skillset__linha--ativa')).toBe(false)
   })
 
-  it('revela imagem decorativa própria só na linha ativa, sem alt e escondida do leitor de tela', async () => {
+  it('hover na linha não revela nenhuma imagem decorativa, efeito removido', async () => {
     const root = await montarSkillset('pt')
-    expect(root.querySelector('[data-testid="skillset-image"]')).toBeNull()
     const linhas = [...root.querySelectorAll('[data-testid="skillset-row"]')]
     linhas[0].dispatchEvent(new MouseEvent('mouseenter'))
     await nextTick()
-    const imagem = linhas[0].querySelector('[data-testid="skillset-image"]') as HTMLImageElement
-    expect(imagem).not.toBeNull()
-    expect(imagem.getAttribute('alt')).toBe('')
-    expect(imagem.getAttribute('aria-hidden')).toBe('true')
-    expect(imagem.getAttribute('src')).toContain('unify-eventos.webp')
+    expect(root.querySelector('[data-testid="skillset-image"]')).toBeNull()
+    const imagensForaDosIcones = [...linhas[0].querySelectorAll('img')].filter(
+      (img) => !img.closest('[data-testid="skillset-icons"]'),
+    )
+    expect(imagensForaDosIcones).toEqual([])
     linhas[0].dispatchEvent(new MouseEvent('mouseleave'))
     await nextTick()
     expect(root.querySelector('[data-testid="skillset-image"]')).toBeNull()
   })
 
-  it('cada linha ativa revela o asset da própria frente', async () => {
+  it('nenhuma frente revela imagem decorativa no hover', async () => {
     const root = await montarSkillset('pt')
     const linhas = [...root.querySelectorAll('[data-testid="skillset-row"]')]
-    const fontes = ['unify-eventos.webp', 'code.webp', 'wallhere.com.jpg', 'code.webp', 'wallhere.com.jpg', 'code.webp']
-    for (const [indice, fonte] of fontes.entries()) {
-      linhas[indice].dispatchEvent(new MouseEvent('mouseenter'))
+    for (const linha of linhas) {
+      linha.dispatchEvent(new MouseEvent('mouseenter'))
       await nextTick()
-      const imagem = linhas[indice].querySelector('[data-testid="skillset-image"]')
-      expect(imagem?.getAttribute('src')).toContain(fonte)
-      linhas[indice].dispatchEvent(new MouseEvent('mouseleave'))
+      expect(root.querySelector('[data-testid="skillset-image"]')).toBeNull()
+      linha.dispatchEvent(new MouseEvent('mouseleave'))
       await nextTick()
     }
   })
@@ -289,12 +286,9 @@ describe('SkillsetSection (CSS editorial)', () => {
     expect(blocoHover).toMatch(/\.skillset__linha--ativa [^{]*\.skillset__numero[^{]*\{[^}]*var\(--color-accent\)/)
   })
 
-  it('imagem decorativa é absoluta e sobrepõe as linhas vizinhas sem clip', () => {
-    const regra = css.match(/\.skillset__imagem\s*\{([^}]*)\}/)?.[1] ?? ''
-    expect(regra).toContain('position: absolute')
-    expect(regra).toContain('pointer-events: none')
-    expect(regra).toMatch(/z-index:\s*[1-9]/)
-    expect(css).not.toMatch(/\.skillset\s*\{[^}]*overflow:\s*hidden/)
-    expect(css).not.toMatch(/\.skillset__linha\s*\{[^}]*overflow:\s*hidden/)
+  it('efeito de imagem decorativa removido do componente por completo', () => {
+    expect(css).not.toContain('.skillset__imagem')
+    expect(css).not.toContain('skillset-image')
+    expect(css).not.toContain('IMAGENS_POR_FRENTE')
   })
 })
