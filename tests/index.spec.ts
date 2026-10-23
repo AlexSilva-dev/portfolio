@@ -126,6 +126,21 @@ describe('Home — SectionHeading com escala editorial nova', () => {
     expect(css).toMatch(/\.section-heading__title\s*\{[^}]*font-size:\s*clamp\([^)]*8vw/)
     expect(css).toMatch(/\.section-heading__kicker\s*\{[^}]*font-family:\s*var\(--font-mono\)/)
   })
+
+  it('título em tinta cheia sobre o papel, kicker em violeta profundo e versão clara pra área escura', () => {
+    const css = fonteSectionHeading()
+    // tinta cheia na área papel, sem tom lavado nem opacidade reduzida
+    expect(css).toMatch(/^\.section-heading__title\s*\{[^}]*color:\s*var\(--color-ink\)/m)
+    expect(css).not.toMatch(/^\.section-heading__title\s*\{[^}]*color:\s*var\(--color-text\)/m)
+    // kicker numerado em violeta profundo, contraste 5,24 sobre o papel
+    expect(css).toMatch(/^\.section-heading__kicker\s*\{[^}]*color:\s*var\(--color-accent-deep\)/m)
+    // acabamento editorial mantido: peso alto e entrelinha apertada
+    expect(css).toMatch(/^\.section-heading__title\s*\{[^}]*font-weight:\s*800/m)
+    expect(css).toMatch(/^\.section-heading__title\s*\{[^}]*line-height:\s*0\.95/m)
+    // se o heading for usado em seção escura, título em cor de papel e kicker no violeta claro
+    expect(css).toMatch(/\.section-heading--escuro\s+\.section-heading__title\s*\{[^}]*color:\s*var\(--color-text\)/)
+    expect(css).toMatch(/\.section-heading--escuro\s+\.section-heading__kicker\s*\{[^}]*color:\s*var\(--color-accent\)/)
+  })
 })
 
 describe('Home — conteúdo das seções', () => {

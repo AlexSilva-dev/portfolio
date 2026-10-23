@@ -62,7 +62,7 @@ describe('dicionário experience', () => {
 })
 
 describe('SectionHeading', () => {
-  function montar(props: { kicker: string, title: string }) {
+  function montar(props: { kicker: string, title: string, tema?: 'papel' | 'escuro' }) {
     const root = document.createElement('div')
     document.body.appendChild(root)
     const app = createApp(SectionHeading, props)
@@ -84,6 +84,15 @@ describe('SectionHeading', () => {
     expect(title?.textContent).toBe('Experiência')
     expect(title?.tagName).toBe('H2')
     app.unmount()
+  })
+  it('área papel é o padrão e o tema escuro aplica a classe modificadora', () => {
+    const papel = montar({ kicker: 'Onde eu já entreguei resultado', title: 'Experiência' })
+    expect(papel.root.querySelector('.section-heading')?.classList.contains('section-heading--escuro')).toBe(false)
+    papel.app.unmount()
+
+    const escuro = montar({ kicker: 'Onde eu já entreguei resultado', title: 'Experiência', tema: 'escuro' })
+    expect(escuro.root.querySelector('.section-heading')?.classList.contains('section-heading--escuro')).toBe(true)
+    escuro.app.unmount()
   })
 })
 
