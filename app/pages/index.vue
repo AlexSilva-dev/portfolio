@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { projects } from '../content/projects'
 import HeroSection from '../components/HeroSection.vue'
+import MarqueeStrip from '../components/MarqueeStrip.vue'
 import SectionIntro from '../components/SectionIntro.vue'
 import SectionEvolution from '../components/SectionEvolution.vue'
 import SectionHeading from '../components/SectionHeading.vue'
@@ -9,10 +10,17 @@ import ExperienceCard from '../components/ExperienceCard.vue'
 import ProjectRow from '../components/ProjectRow.vue'
 import SkillsetSection from '../components/SkillsetSection.vue'
 import ContactSection from '../components/ContactSection.vue'
+import { useVelocitySkew } from '../composables/useVelocitySkew'
 
 const { dictionary } = useLocale()
 
 const secoes = computed(() => dictionary.value.sections)
+const layout = computed(() => dictionary.value.sections.layout)
+
+// Wrapper interno do main recebe a distorcao por velocidade, nunca o html
+// ou body inteiro, para nao borrar o cabecalho fixo e o cursor.
+const wrapperSkew = ref<HTMLElement | null>(null)
+useVelocitySkew(wrapperSkew)
 
 // Conteúdo canônico e dicionário andam em paralelo por posição; o filtro
 // descarta qualquer par sem texto para a linha nunca receber texto indefinido.
@@ -27,8 +35,10 @@ const projetosVinculados = computed(() =>
 </script>
 
 <template>
-  <div class="home">
+  <div ref="wrapperSkew" class="home">
     <HeroSection />
+
+    <MarqueeStrip :palavras="layout.marquee.palavras" :aria-label="layout.marquee.ariaLabel" />
 
     <SectionIntro />
 
