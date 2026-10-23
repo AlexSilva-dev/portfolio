@@ -18,5 +18,11 @@ const { locale } = useLocale()
 useHead({
   htmlAttrs: { lang: computed(() => locale.value) },
   link: [{ rel: 'icon', type: 'image/x-icon', href: `${SITE_BASE_URL}favicon.ico` }],
+  script: [
+    {
+      innerHTML:
+        "document.documentElement.classList.add('js');if(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches){document.documentElement.classList.add('sem-preloader')}",
+    },
+  ],
 })
 </script>

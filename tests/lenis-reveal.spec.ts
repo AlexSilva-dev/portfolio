@@ -383,7 +383,7 @@ describe('SectionHeading', () => {
 })
 
 describe('layout default', () => {
-  it('monta o Preloader dentro de ClientOnly', async () => {
+  it('monta o Preloader direto no layout, sem ClientOnly, para sair no HTML do servidor', async () => {
     stubMatchMedia(true)
 
     const raiz = document.createElement('div')
@@ -396,6 +396,7 @@ describe('layout default', () => {
 
     const cortina = raiz.querySelector('[data-testid="preloader"]')
     expect(cortina).not.toBeNull()
+    expect(cortina?.closest('[data-testid="client-only-stub"]')).toBeNull()
 
     app.unmount()
   })

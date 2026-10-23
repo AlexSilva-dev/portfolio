@@ -16,9 +16,7 @@ const { announcement } = tryUseNuxtApp()
 </script>
 
 <template>
-  <ClientOnly>
-    <Preloader />
-  </ClientOnly>
+  <Preloader />
   <ClientOnly>
     <CustomCursor />
   </ClientOnly>

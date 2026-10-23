@@ -45,6 +45,30 @@ a {
   outline-offset: 2px;
 }
 
+/* Casca da cortina de abertura. Vive no CSS global, que entra render-blocking
+   no head, para cobrir a página desde o primeiro paint mesmo antes do chunk
+   do componente carregar. O restante do visual fica no Preloader.vue. */
+[data-testid="preloader"] {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background-color: var(--color-bg);
+}
+
+/* Rolagem travada enquanto a cortina estiver no DOM, o seletor some junto
+   com o elemento na saída, sem precisar de JavaScript. */
+html:has([data-testid="preloader"]) {
+  overflow: hidden;
+}
+
+/* Movimento reduzido esconde a cortina antes do primeiro paint, marcado
+   pelo script inline do head em app.vue. Sem JavaScript a classe `js` nunca
+   entra no html, então a cortina também não aparece e o site fica legível. */
+html.sem-preloader [data-testid="preloader"],
+html:not(.js) [data-testid="preloader"] {
+  display: none;
+}
+
 .container {
   width: 100%;
   max-width: 72rem;
