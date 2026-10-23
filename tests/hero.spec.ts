@@ -222,19 +222,20 @@ describe('HeroSection composição editorial (CSS)', () => {
     'utf-8',
   )
 
-  it('display do nome entre 11 e 13vw, peso alto e entrelinha apertada em 2 blocos', () => {
+  it('display do nome escala por largura E altura com min(), peso alto e entrelinha apertada', () => {
     const tamanho = css.match(/\.hero__titulo\s*\{([^}]*)\}/)?.[1] ?? ''
-    expect(tamanho).toMatch(/font-size:\s*clamp\([^,]*,\s*12vw,\s*[^)]*\)/)
+    expect(tamanho).toMatch(/font-size:\s*min\(\s*14rem,\s*\d+vw,\s*\d+vh\s*\)/)
     expect(tamanho).toMatch(/font-weight:\s*800/)
     expect(tamanho).toMatch(/line-height:\s*0\.9/)
     const linha = css.match(/\.hero__titulo-linha\s*\{([^}]*)\}/)?.[1] ?? ''
     expect(linha).toMatch(/display:\s*block/)
   })
 
-  it('recorte do dono flutua em escala de cinza cobrindo a meia tela com altura da dobra', () => {
+  it('recorte do dono flutua em escala de cinza com altura limitada pela dobra em vh', () => {
     expect(css).toMatch(/filter:\s*grayscale\(1\)/)
     expect(css).toMatch(/object-fit:\s*contain/)
-    expect(css).toMatch(/min-height:\s*100dvh/)
+    const foto = css.match(/\.hero__foto img\s*\{([^}]*)\}/)?.[1] ?? ''
+    expect(foto).toMatch(/max-height:\s*\d+vh/)
   })
 
   it('chips com borda tinta e hover com borda e texto em violeta profundo', () => {
@@ -280,9 +281,9 @@ describe('HeroSection composição editorial (CSS)', () => {
     expect(raiz).toMatch(/padding-inline:\s*clamp\(1\.5rem,\s*6vw,\s*6rem\)/)
   })
 
-  it('nome display gigante com teto maior e foto ocupando meia tela', () => {
+  it('nome display gigante com teto em rem e foto ocupando meia tela', () => {
     const tamanho = css.match(/\.hero__titulo\s*\{([^}]*)\}/)?.[1] ?? ''
-    expect(tamanho).toMatch(/font-size:\s*clamp\([^,]*,\s*12vw,\s*14rem\)/)
+    expect(tamanho).toMatch(/font-size:\s*min\(\s*14rem,\s*\d+vw,\s*\d+vh\s*\)/)
     const grade = [...css.matchAll(/\.hero__grade\s*\{([^}]*)\}/g)].map(
       (m) => m[1],
     ).find((bloco) => bloco.includes('grid-template-columns')) ?? ''
@@ -300,12 +301,39 @@ describe('HeroSection composição editorial (CSS)', () => {
     expect(bloco).toMatch(/flex:\s*1 1 100%/)
   })
 
-  it('display compacto de altura baixa fica dentro da faixa de 11 a 13vw do ui-spec', () => {
-    const bloco =
-      css.match(/@media \(min-width: 768px\) and \(max-height: 820px\)\s*\{([\s\S]*?)\n\}/)?.[1] ?? ''
-    const tamanho = bloco.match(/\.hero__titulo\s*\{([^}]*)\}/)?.[1] ?? ''
-    expect(tamanho).toMatch(/font-size:\s*clamp\([^,]+,\s*1[123]vw,\s*[^)]+\)/)
-    expect(tamanho).not.toMatch(/8\.5vw/)
+  it('media query de altura baixa revogado, sizing contínuo por min() cobre todas as alturas', () => {
+    expect(css).not.toMatch(/@media[^{]*max-height/)
+    expect(css).not.toContain('8.5vw')
+  })
+
+  it('hero com altura ligada à viewport, 100svh menos o header, com fallback vh e dvh', () => {
+    const raiz = css.match(/\.hero\s*\{([^}]*)\}/)?.[1] ?? ''
+    expect(raiz).toMatch(/--hero-header-altura:\s*4\.5rem/)
+    const alturas =
+      raiz.match(/min-height:\s*calc\(100[svd]{0,2}h - var\(--hero-header-altura\)\)/g) ?? []
+    const cadeia = alturas.join('\n')
+    expect(cadeia).toContain('100vh')
+    expect(cadeia).toContain('100dvh')
+    expect(cadeia).toContain('100svh')
+    // svh por último, unit de viewport estável vence quando suportada
+    expect(alturas.at(-1)).toContain('100svh')
+  })
+
+  it('coluna de texto comprime sem estourar, gap flexível por altura e min-height 0', () => {
+    const texto = css.match(/\.hero__texto\s*\{([^}]*)\}/)?.[1] ?? ''
+    expect(texto).toMatch(/min-height:\s*0/)
+    expect(texto).toMatch(/gap:\s*clamp\([^,]+,\s*[\d.]+vh,\s*[^)]+\)/)
+    const grade = [...css.matchAll(/\.hero__grade\s*\{([^}]*)\}/g)]
+      .map((m) => m[1])
+      .find((bloco) => bloco.includes('grid-template-columns')) ?? ''
+    expect(grade).toMatch(/min-height:\s*0/)
+  })
+
+  it('rótulos dos 3 números nunca truncados, quebra de linha preservada', () => {
+    const rotulo = css.match(/\.hero__stat-rotulo\s*\{([^}]*)\}/)?.[1] ?? ''
+    expect(rotulo).not.toMatch(/white-space:\s*nowrap/)
+    expect(rotulo).not.toMatch(/text-overflow:\s*ellipsis/)
+    expect(rotulo).toMatch(/line-height/)
   })
 
   it('tratamentos CSS da foto antiga no rastro morreram', () => {

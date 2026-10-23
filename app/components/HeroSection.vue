@@ -120,9 +120,15 @@ useMagnetic(ctaSecundariaEl)
   /* Full-bleed, escapa do main.container do layout atravessando a viewport,
      mesmo padrao de Skillset e Contato, com o overflow-x clip global */
   margin-inline: calc(50% - 50vw);
-  min-height: 100dvh;
+  /* Altura ligada a viewport de verdade, descontando o header do layout.
+     Cadeia de fallback, a ultima unit suportada vence. svh e a altura pequena
+     estavel, que nunca esconde conteudo atras de interface do browser. */
+  --hero-header-altura: 4.5rem;
+  min-height: calc(100vh - var(--hero-header-altura));
+  min-height: calc(100dvh - var(--hero-header-altura));
+  min-height: calc(100svh - var(--hero-header-altura));
   overflow: hidden;
-  padding-block: 1.5rem clamp(2rem, 4vw, 3rem);
+  padding-block: clamp(0.75rem, 2vh, 1.5rem) clamp(1.5rem, 3.5vh, 3rem);
   padding-inline: clamp(1.5rem, 6vw, 6rem);
   position: relative;
   width: 100vw;
@@ -158,13 +164,15 @@ useMagnetic(ctaSecundariaEl)
   flex: 1;
   gap: clamp(2rem, 4vw, 4rem);
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  margin-top: clamp(1.5rem, 3vw, 3rem);
+  margin-top: clamp(1rem, 2.5vh, 3rem);
+  min-height: 0;
 }
 
 .hero__texto {
   display: flex;
   flex-direction: column;
-  gap: clamp(0.9rem, 2vh, 1.5rem);
+  gap: clamp(0.6rem, 1.8vh, 1.4rem);
+  min-height: 0;
   min-width: 0;
 }
 
@@ -202,7 +210,7 @@ useMagnetic(ctaSecundariaEl)
 }
 
 .hero__titulo {
-  font-size: clamp(3rem, 12vw, 14rem);
+  font-size: min(14rem, 18vw, 18vh);
   font-weight: 800;
   letter-spacing: -0.02em;
   line-height: 0.9;
@@ -313,24 +321,9 @@ useMagnetic(ctaSecundariaEl)
   display: block;
   filter: grayscale(1);
   height: 100%;
+  max-height: 78vh;
   object-fit: contain;
   width: 100%;
-}
-
-/* Altura baixa de desktop e notebooks: display e respiros compactados pra
-   nome, chips, numeros e CTAs ficarem acima da dobra em 1280x720. */
-@media (min-width: 768px) and (max-height: 820px) {
-  .hero {
-    padding-block: 1rem 2rem;
-  }
-
-  .hero__titulo {
-    font-size: clamp(2.75rem, 11vw, 8.5rem);
-  }
-
-  .hero__texto {
-    gap: 0.75rem;
-  }
 }
 
 @media (max-width: 767px) {
