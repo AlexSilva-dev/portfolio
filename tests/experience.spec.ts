@@ -1,8 +1,57 @@
-import { afterEach, describe, expect, it } from 'vitest'
-import { createApp, type App } from 'vue'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { createApp, defineComponent, h, ref, type App } from 'vue'
+import { gsap } from 'gsap'
 import { pt, en, type ExperienceItem } from '../app/i18n/sections/experience'
 import SectionHeading from '../app/components/SectionHeading.vue'
 import ExperienceCard from '../app/components/ExperienceCard.vue'
+import { useStagger } from '../app/composables/useStagger'
+
+const { ScrollTriggerMock } = vi.hoisted(() => ({
+  ScrollTriggerMock: {
+    create: vi.fn(),
+    update: vi.fn(),
+    refresh: vi.fn(),
+  },
+}))
+
+vi.mock('gsap/ScrollTrigger', () => ({ ScrollTrigger: ScrollTriggerMock }))
+
+class FakeMediaQueryList {
+  matches = false
+  private listeners = new Set<() => void>()
+
+  addEventListener(_type: string, listener: () => void) {
+    this.listeners.add(listener)
+  }
+
+  removeEventListener(_type: string, listener: () => void) {
+    this.listeners.delete(listener)
+  }
+}
+
+function stubMatchMedia(movimentoReduzido = false) {
+  vi.stubGlobal(
+    'matchMedia',
+    vi.fn((query: string) => {
+      const lista = new FakeMediaQueryList()
+      lista.matches = query.includes('reduced-motion') ? movimentoReduzido : false
+      return lista
+    }),
+  )
+}
+
+/** Stub encadeável da timeline pra observar os grupos animados sem rodar gsap real. */
+function espiarTimeline() {
+  const tl = { from: vi.fn() }
+  const spy = vi.spyOn(gsap, 'timeline').mockReturnValue(tl as never)
+  return { tl, spy }
+}
+
+function lerFonteCard() {
+  return readFileSync(join(process.cwd(), 'app/components/ExperienceCard.vue'), 'utf-8')
+}
 
 const ORDEM_ESPERADA = ['AdSalesBrazil', 'Ajax Hub', 'Tedsys']
 
@@ -171,6 +220,8 @@ describe('SectionHeading', () => {
 
 describe('ExperienceCard', () => {
   function montar(item: ExperienceItem) {
+    stubMatchMedia()
+    espiarTimeline()
     const root = document.createElement('div')
     document.body.appendChild(root)
     const app = createApp(ExperienceCard, { item })
@@ -180,6 +231,8 @@ describe('ExperienceCard', () => {
 
   afterEach(() => {
     document.body.innerHTML = ''
+    vi.unstubAllGlobals()
+    vi.restoreAllMocks()
   })
 
   it('renderiza empresa, papel, período, conquistas e chips', () => {
@@ -207,5 +260,194 @@ describe('ExperienceCard', () => {
     const { root, app } = montar(pt.items[1])
     expect(root.querySelector('[data-testid="experience-card-dot"]')).toBeNull()
     app.unmount()
+  })
+})
+
+describe('useStagger', () => {
+  function montarHospedeiro(bullets = 3, chips = 2, movimentoReduzido = false) {
+    stubMatchMedia(movimentoReduzido)
+    const raiz = document.createElement('div')
+    document.body.appendChild(raiz)
+    const Hospedeiro = defineComponent({
+      setup() {
+        const alvo = ref<HTMLElement | null>(null)
+        useStagger(alvo, { seletorBullets: '.bullet', seletorChips: '.chip' })
+        return () =>
+          h('article', { ref: alvo }, [
+            ...Array.from({ length: bullets }, (_, i) => h('li', { class: 'bullet' }, `b${i}`)),
+            ...Array.from({ length: chips }, (_, i) => h('li', { class: 'chip' }, `c${i}`)),
+          ])
+      },
+    })
+    const app = createApp(Hospedeiro)
+    app.mount(raiz)
+    const card = raiz.querySelector('article') as HTMLElement
+    return { app, card }
+  }
+
+  afterEach(() => {
+    document.body.innerHTML = ''
+    vi.unstubAllGlobals()
+    vi.restoreAllMocks()
+  })
+
+  it('cria um timeline com gatilho no próprio card na primeira entrada no viewport', () => {
+    const { spy } = espiarTimeline()
+
+    const { card, app } = montarHospedeiro()
+
+    expect(spy).toHaveBeenCalledTimes(1)
+    const vars = spy.mock.calls[0][0] as Record<string, unknown>
+    const gatilho = vars.scrollTrigger as Record<string, unknown>
+    expect(gatilho.trigger).toBe(card)
+    expect(gatilho.start).toBe('top 80%')
+    expect(gatilho.once).toBe(true)
+    app.unmount()
+  })
+
+  it('anima o card com subida de 40px e fade, bullets em stagger 0.06 e chips depois dos bullets', () => {
+    const { tl } = espiarTimeline()
+
+    const { app } = montarHospedeiro()
+
+    expect(tl.from).toHaveBeenCalledTimes(3)
+
+    const [alvoCard, varsCard] = tl.from.mock.calls[0]
+    expect(alvoCard).toBeInstanceOf(HTMLElement)
+    expect((varsCard as Record<string, unknown>).y).toBe(40)
+    expect((varsCard as Record<string, unknown>).opacity).toBe(0)
+
+    const [alvosBullets, varsBullets] = tl.from.mock.calls[1]
+    expect((alvosBullets as NodeList).length).toBe(3)
+    expect((varsBullets as Record<string, unknown>).stagger).toBe(0.06)
+    const posicaoBullets = tl.from.mock.calls[1][2] as number
+
+    const [alvosChips, varsChips] = tl.from.mock.calls[2]
+    expect((alvosChips as NodeList).length).toBe(2)
+    expect((varsChips as Record<string, unknown>).stagger).toBe(0.06)
+    const posicaoChips = tl.from.mock.calls[2][2] as number
+
+    expect(posicaoChips, 'chips entram depois dos bullets').toBeGreaterThan(posicaoBullets)
+    app.unmount()
+  })
+
+  it('reverte o contexto gsap no unmount', () => {
+    espiarTimeline()
+    const reverter = vi.fn()
+    vi.spyOn(gsap, 'context').mockImplementation(() => ({ revert: reverter }) as never)
+
+    const { app } = montarHospedeiro()
+
+    expect(reverter).not.toHaveBeenCalled()
+    app.unmount()
+    expect(reverter).toHaveBeenCalledTimes(1)
+  })
+
+  it('não cria animação nenhuma com movimento reduzido declarado', () => {
+    const { spy } = espiarTimeline()
+
+    montarHospedeiro(3, 2, true)
+
+    expect(spy).not.toHaveBeenCalled()
+  })
+
+  it('card sem bullets nem chips anima só a entrada do card', () => {
+    const { tl } = espiarTimeline()
+
+    const { app } = montarHospedeiro(0, 0)
+
+    expect(tl.from).toHaveBeenCalledTimes(1)
+    app.unmount()
+  })
+})
+
+describe('ExperienceCard movimento', () => {
+  afterEach(() => {
+    document.body.innerHTML = ''
+    vi.unstubAllGlobals()
+    vi.restoreAllMocks()
+  })
+
+  it('card real anima card, conquistas e chips pela mesma timeline em stagger', () => {
+    stubMatchMedia()
+    const { tl, spy } = espiarTimeline()
+
+    const root = document.createElement('div')
+    document.body.appendChild(root)
+    const app = createApp(ExperienceCard, { item: pt.items[2] })
+    app.mount(root)
+
+    expect(spy).toHaveBeenCalledTimes(1)
+    expect(tl.from).toHaveBeenCalledTimes(3)
+    const [, varsCard] = tl.from.mock.calls[0]
+    expect((varsCard as Record<string, unknown>).y).toBe(40)
+
+    const [alvosConquistas, varsConquistas] = tl.from.mock.calls[1]
+    expect((alvosConquistas as NodeList).length).toBe(pt.items[2].achievements.length)
+    expect((varsConquistas as Record<string, unknown>).stagger).toBe(0.06)
+
+    const [alvosChips, varsChips] = tl.from.mock.calls[2]
+    expect((alvosChips as NodeList).length).toBe(pt.items[2].chips.length)
+    expect((varsChips as Record<string, unknown>).stagger).toBe(0.06)
+    app.unmount()
+  })
+
+  it('conteúdo permanece no HTML com o composable ativo, oculto só por JavaScript', () => {
+    stubMatchMedia()
+    espiarTimeline()
+
+    const root = document.createElement('div')
+    document.body.appendChild(root)
+    const app = createApp(ExperienceCard, { item: pt.items[2] })
+    app.mount(root)
+
+    expect(root.textContent).toContain('Tedsys')
+    expect(root.textContent).toContain(pt.items[2].achievements[0])
+    app.unmount()
+  })
+
+  it('movimento reduzido deixa o card direto, sem timeline', () => {
+    stubMatchMedia(true)
+    const { spy } = espiarTimeline()
+
+    const root = document.createElement('div')
+    document.body.appendChild(root)
+    const app = createApp(ExperienceCard, { item: pt.items[0] })
+    app.mount(root)
+
+    expect(spy).not.toHaveBeenCalled()
+    expect(root.querySelector('[data-testid="experience-card-dot"]')).not.toBeNull()
+    app.unmount()
+  })
+})
+
+describe('ExperienceCard interação declarada no SFC', () => {
+  it('hover eleva o card com transform e acende a barra lateral em violeta profundo', () => {
+    const fonte = lerFonteCard()
+
+    const base = fonte.match(/\.experience-card\s*\{([^}]*)\}/)?.[1] ?? ''
+    expect(base, 'transição suave em vez de troca seca de estado').toMatch(/transition:/)
+    expect(base, 'barra de accent existe desde o estado base, layout não move').toMatch(/border-left:/)
+
+    const hover = fonte.match(/\.experience-card:hover\s*\{([^}]*)\}/)?.[1] ?? ''
+    expect(hover, 'elevação por transform, sem reflow dos vizinhos').toMatch(/translateY/)
+    expect(hover).toMatch(/border-left-color:\s*var\(--color-accent-deep\)/)
+  })
+
+  it('dot verde do período pulsa em loop lento de opacidade', () => {
+    const fonte = lerFonteCard()
+
+    expect(fonte).toMatch(/@keyframes\s+\w*pulso\w*\s*\{[\s\S]*?opacity/)
+    const dot = fonte.match(/\.experience-card__dot\s*\{([^}]*)\}/)?.[1] ?? ''
+    expect(dot).toMatch(/animation:.*pulso/)
+    expect(dot).toMatch(/infinite/)
+  })
+
+  it('movimento declarativo corta no reduced motion e deixa o conteúdo direto', () => {
+    const fonte = lerFonteCard()
+
+    const media = fonte.match(/@media \(prefers-reduced-motion: reduce\)\s*\{([\s\S]*?)\n\}/)?.[1] ?? ''
+    expect(media).toMatch(/animation:\s*none/)
+    expect(media).toMatch(/transition:\s*none/)
   })
 })
