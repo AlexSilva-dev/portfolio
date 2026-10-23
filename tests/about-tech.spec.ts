@@ -24,13 +24,13 @@ const TEXTO_JORNADA_PT =
   'Em três anos, saí do estágio pra referência técnica de um ERP em produção, cortei a inadimplência de 18% pra 7,5% recuperando R$ 15 mil por mês e coloquei IA pra resolver 80% do atendimento. Hoje sou sócio-fundador e responsável técnico da AdSalesBrazil, levando produto do zero à produção, do app Android ao backend.'
 
 const TEXTO_ORIGEM_PT =
-  'Sempre fui fascinado por tecnologia, muito antes de saber que dava pra viver disso. Fui o primeiro da minha família a concluir o ensino médio e transformei esse interesse em profissão. De lá pra cá, foi entrega sobre entrega, do ERP ao CRM com IA homologada pela Meta.'
+  'Sempre fui fascinado por tecnologia e sempre precisei nadar contra a maré. Vim de família humilde, onde nada veio fácil, e foi de lá que trouxe o hábito de ir atrás de cada coisa, da faculdade ao primeiro estágio, do estágio à referência técnica de um ERP em produção. Hoje o padrão continua, entrega sobre entrega, do ERP ao CRM com IA homologada pela Meta.'
 
 const TEXTO_JORNADA_EN =
   'In three years, I went from intern to the technical reference of an ERP in production, cut delinquency from 18% to 7.5% recovering R$ 15 thousand a month, and put AI to work resolving 80% of support. Today I am co-founder and technical lead at AdSalesBrazil, taking product from zero to production, from the Android app to the backend.'
 
 const TEXTO_ORIGEM_EN =
-  'I have always been fascinated by technology, long before I knew I could make a living from it. I was the first in my family to finish high school and turned that interest into a profession. Since then, it has been delivery after delivery, from the ERP to the AI CRM homologated by Meta.'
+  'I have always been fascinated by technology, and I have always had to swim against the current. I come from a humble family, where nothing came easy, and that is where I picked up the habit of going after everything, from college to my first internship, from internship to the technical reference of an ERP in production. The pattern remains, delivery after delivery, from the ERP to the AI CRM homologated by Meta.'
 
 const DESCRICOES_SKILLSET_PT = [
   'apps multiplataforma da modelagem ao deploy',
@@ -67,7 +67,7 @@ describe('Sobre — conteúdo narrativo', () => {
     expect(aboutPt.paragraphs[0]).toBe(TEXTO_JORNADA_PT)
   })
 
-  it('parágrafo de origem conta a fascinação cedo pela tecnologia e a entrega contínua até o CRM da Meta', () => {
+  it('parágrafo de origem conta a família humilde, a maré contra e a entrega contínua até o CRM da Meta', () => {
     expect(aboutPt.paragraphs[1]).toBe(TEXTO_ORIGEM_PT)
   })
 
