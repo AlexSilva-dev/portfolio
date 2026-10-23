@@ -12,7 +12,7 @@ const props = defineProps<{
 }>()
 
 // Com url a linha inteira é clicável, sem url nenhum elemento clicável.
-// O SaaS (sem url) mantém o selo âmbar de dot e texto e nenhuma âncora.
+// O SaaS (sem url) mantém o selo neutro de dot e texto e nenhuma âncora.
 const linkAttrs = computed(() =>
   props.project.url
     ? { href: props.project.url, target: '_blank', rel: 'noopener' }
@@ -28,7 +28,11 @@ const linkAttrs = computed(() =>
     data-testid="project-row"
     v-bind="linkAttrs"
   >
-    <StatusBadge v-if="project.status === 'wip'" variant="wip" :label="text.badge" />
+    <StatusBadge
+      v-if="project.status === 'wip' || project.status === 'neutral'"
+      :variant="project.status"
+      :label="text.badge"
+    />
     <span class="project-row__topo">
       <h3 class="project-row__nome" data-testid="project-row-name">{{ text.name }}</h3>
       <span

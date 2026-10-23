@@ -1,11 +1,25 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { basename, join } from 'node:path'
-import { afterEach, describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h } from 'vue'
+import type { Component } from 'vue'
 import ProjectRow from '../app/components/ProjectRow.vue'
 import StatusBadge from '../app/components/StatusBadge.vue'
 import { projects } from '../app/content/projects'
 import { en, pt } from '../app/i18n/sections/projects'
+
+vi.mock('../app/composables/useLocale', async () => {
+  const { computed, ref } = await import('vue')
+  const localeRef = ref('pt')
+  return {
+    useLocale: () => ({
+      locale: localeRef,
+      dictionary: computed(() => getDictionary(localeRef.value as 'pt' | 'en')),
+      setLocale: vi.fn(),
+    }),
+  }
+})
+import { getDictionary } from '../app/i18n'
 
 const componentesPath = join(import.meta.dirname, '..', 'app', 'components')
 
@@ -28,7 +42,7 @@ describe('conteúdo estruturado de projetos', () => {
   })
 
   it('define o status de cada projeto na ordem', () => {
-    expect(projects.map((p) => p.status)).toEqual(['production', 'solo', 'tool', 'wip'])
+    expect(projects.map((p) => p.status)).toEqual(['production', 'wip', 'tool', 'neutral'])
   })
 
   it('linka CRM ao site oficial, UcaTech ao site oficial e Check All Pages ao repositório', () => {
@@ -104,9 +118,9 @@ describe('dicionário projects', () => {
     ])
     expect(pt.items.map((item) => item.badge)).toEqual([
       'Produto em produção',
-      'Projeto solo',
-      'Ferramenta de linha de comando',
       'Em desenvolvimento',
+      'Ferramenta de linha de comando',
+      'Projeto próprio',
     ])
   })
 
@@ -119,9 +133,9 @@ describe('dicionário projects', () => {
     ])
     expect(en.items.map((item) => item.badge)).toEqual([
       'Product in production',
-      'Solo project',
-      'Command line tool',
       'In development',
+      'Command line tool',
+      'Own project',
     ])
   })
 
@@ -295,7 +309,7 @@ describe('ProjectRow, lista editorial', () => {
     app.unmount()
   })
 
-  it('linha sem url não renderiza rótulo de ação nenhum, o selo âmbar já comunica', () => {
+  it('linha sem url não renderiza rótulo de ação nenhum, o selo de status já comunica', () => {
     const { root, app } = montarLinhas()
     const saas = linhasRenderizadas(root)[3]
     expect(saas.querySelector('[data-testid="project-row-cta"]'), 'cta fantasma no SaaS').toBeNull()
@@ -335,23 +349,36 @@ describe('regra de link na lista editorial', () => {
     app.unmount()
   })
 
-  it('linha do SaaS não tem âncora nenhuma e mantém selo âmbar de dot e texto', () => {
+  it('UcaTech carrega o selo âmbar Em desenvolvimento com dot e texto', () => {
+    const { root, app } = montarLinhas()
+    const uca = linhasRenderizadas(root)[1]
+    const selo = uca.querySelector('[data-testid="status-badge"]')
+    expect(selo, 'selo ausente no UcaTech').toBeTruthy()
+    expect(selo!.classList.contains('status-badge--wip'), 'selo do UcaTech deveria ser âmbar').toBe(true)
+    expect(selo!.querySelector('.status-badge__dot'), 'dot ausente no selo do UcaTech').toBeTruthy()
+    expect(selo!.textContent).toContain(pt.items[1].badge)
+    app.unmount()
+  })
+
+  it('linha do SaaS não tem âncora nenhuma e mantém selo neutro de Projeto próprio', () => {
     const { root, app } = montarLinhas()
     const saas = linhasRenderizadas(root)[3]
     expect(saas.tagName).toBe('ARTICLE')
     expect(saas.querySelector('a')).toBeNull()
     const selo = saas.querySelector('[data-testid="status-badge"]')
-    expect(selo, 'selo âmbar ausente no SaaS').toBeTruthy()
-    expect(selo!.classList.contains('status-badge--wip'), 'selo do SaaS deveria ser âmbar').toBe(true)
+    expect(selo, 'selo neutro ausente no SaaS').toBeTruthy()
+    expect(selo!.classList.contains('status-badge--neutral'), 'selo do SaaS deveria ser neutro').toBe(true)
     expect(selo!.querySelector('.status-badge__dot'), 'dot ausente no selo do SaaS').toBeTruthy()
     expect(selo!.textContent).toContain(pt.items[3].badge)
     app.unmount()
   })
 
-  it('somente o SaaS carrega selo, as outras linhas são limpas', () => {
+  it('UcaTech e SaaS carregam selo, CRM e Check All Pages são linhas limpas', () => {
     const { root, app } = montarLinhas()
     const linhas = linhasRenderizadas(root)
-    for (const i of [0, 1, 2]) {
+    expect(linhas[1].querySelector('[data-testid="status-badge"]'), 'selo ausente no UcaTech').toBeTruthy()
+    expect(linhas[3].querySelector('[data-testid="status-badge"]'), 'selo ausente no SaaS').toBeTruthy()
+    for (const i of [0, 2]) {
       expect(linhas[i].querySelector('[data-testid="status-badge"]'), `selo inesperado na linha ${i}`).toBeNull()
     }
     app.unmount()
@@ -391,5 +418,66 @@ describe('composição editorial da linha (CSS)', () => {
   it('usa só tokens, sem hex cru, e reduced motion corta a transição', () => {
     expect(css(), 'hex cru proibido fora de tokens.css').not.toMatch(/#[0-9A-Fa-f]{3,8}\b/)
     expect(css()).toMatch(/@media \(prefers-reduced-motion: reduce\)[\s\S]*?transition:\s*none/)
+  })
+})
+
+/*
+ * Ícones de tecnologia no skillset, config no componente (apresentação não
+ * vai pro dicionário). As frentes 04, 05 e 06 não têm ícone no acervo e
+ * ficam sem, nunca ícone forçado.
+ */
+
+async function montarSkillset(): Promise<HTMLElement> {
+  const { default: SkillsetSection } = await import('../app/components/SkillsetSection.vue')
+  const root = document.createElement('div')
+  document.body.appendChild(root)
+  const app = createApp(SkillsetSection as Component)
+  app.mount(root)
+  return root
+}
+
+describe('ícones de tecnologia no skillset', () => {
+  const iconesPath = join(import.meta.dirname, '..', 'app', 'assets', 'icons')
+
+  it('linhas 01 a 03 carregam 7 ícones no total e 04 a 06 ficam sem ícone', async () => {
+    const root = await montarSkillset()
+    const linhas = [...root.querySelectorAll('[data-testid="skillset-row"]')]
+    expect(linhas, 'esperava 6 linhas no skillset').toHaveLength(6)
+    const contagens = linhas.map(
+      (linha) => linha.querySelectorAll('[data-testid="skillset-icons"] img').length,
+    )
+    expect(contagens).toEqual([1, 4, 2, 0, 0, 0])
+  })
+
+  it('ícones servidos são exatamente os arquivos do acervo, na ordem das linhas', async () => {
+    const root = await montarSkillset()
+    const srcs = [...root.querySelectorAll<HTMLImageElement>('[data-testid="skillset-icons"] img')].map(
+      (img) => img.getAttribute('src') ?? '',
+    )
+    const esperados = [
+      'icons8-kotlin-96.png',
+      'icons8-vue-js-96.png',
+      'icons8-javascript-48.png',
+      'icons8-css-96.png',
+      'icons8-html-96.png',
+      'icons8-spring-boot-48.png',
+      'icons8-php-80.png',
+    ]
+    expect(srcs).toHaveLength(esperados.length)
+    esperados.forEach((nome, i) => {
+      expect(srcs[i], `ícone da posição ${i} deveria ser ${nome}`).toContain(nome)
+      expect(existsSync(join(iconesPath, nome)), `${nome} não existe em app/assets/icons`).toBe(true)
+    })
+  })
+
+  it('ícones são decorativos, alt vazio e aria-hidden, e o hover existente fica intacto', async () => {
+    const root = await montarSkillset()
+    for (const img of [...root.querySelectorAll('[data-testid="skillset-icons"] img')]) {
+      expect(img.getAttribute('alt'), 'alt deveria ser vazio').toBe('')
+      expect(img.getAttribute('aria-hidden'), 'ícone deveria ser aria-hidden').toBe('true')
+    }
+    const css = lerComponente('SkillsetSection.vue')
+    expect(css).toMatch(/\.skillset__icones img\s*\{[^}]*pointer-events:\s*none/)
+    expect(css).toMatch(/\.skillset__icones img\s*\{[^}]*height:\s*(1\.75rem|2rem|2\.5rem)/)
   })
 })

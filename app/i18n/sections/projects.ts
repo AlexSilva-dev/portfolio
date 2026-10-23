@@ -20,7 +20,7 @@ export const pt = {
     },
     {
       name: 'UcaTech',
-      badge: 'Projeto solo',
+      badge: 'Em desenvolvimento',
       summary: 'Plataforma educacional construída sozinha em Kotlin Multiplatform, da modelagem dos dados ao app.',
       chips: ['Kotlin', 'Kotlin Multiplatform'],
       papel: 'Idealizador e desenvolvedor solo',
@@ -38,7 +38,7 @@ export const pt = {
     },
     {
       name: 'SaaS de marketplaces',
-      badge: 'Em desenvolvimento',
+      badge: 'Projeto próprio',
       summary: 'SaaS que conecta vendedores a Mercado Livre e Shopee, com IA e RAG no núcleo do produto.',
       chips: ['IA', 'RAG'],
       papel: 'Idealizador',
@@ -72,7 +72,7 @@ export const en: ProjectsDict = {
     },
     {
       name: 'UcaTech',
-      badge: 'Solo project',
+      badge: 'In development',
       summary: 'Educational platform built alone in Kotlin Multiplatform, from data modeling to the app.',
       chips: ['Kotlin', 'Kotlin Multiplatform'],
       papel: 'Creator and solo developer',
@@ -90,7 +90,7 @@ export const en: ProjectsDict = {
     },
     {
       name: 'Marketplace SaaS',
-      badge: 'In development',
+      badge: 'Own project',
       summary: 'SaaS connecting sellers to Mercado Livre and Shopee, with AI and RAG at the core of the product.',
       chips: ['AI', 'RAG'],
       papel: 'Creator',

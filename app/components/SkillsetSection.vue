@@ -2,6 +2,13 @@
 import fotoCodigo from '../assets/img/code.webp'
 import fotoTelaCodigo from '../assets/img/2560x1600-px-code-coding-computer-Computer-screen-Java-1288551-wallhere.com.jpg'
 import fotoAppEventos from '../assets/img/unify-eventos.webp'
+import iconeKotlin from '../assets/icons/icons8-kotlin-96.png'
+import iconeVue from '../assets/icons/icons8-vue-js-96.png'
+import iconeJs from '../assets/icons/icons8-javascript-48.png'
+import iconeCss from '../assets/icons/icons8-css-96.png'
+import iconeHtml from '../assets/icons/icons8-html-96.png'
+import iconeSpringBoot from '../assets/icons/icons8-spring-boot-48.png'
+import iconePhp from '../assets/icons/icons8-php-80.png'
 
 const { dictionary } = useLocale()
 const tech = computed(() => dictionary.value.sections.tech)
@@ -17,6 +24,18 @@ const IMAGENS_POR_FRENTE = [
   fotoCodigo,
   fotoTelaCodigo,
   fotoCodigo,
+]
+
+// Ícones de tecnologia por frente, decorativos, junto ao nome da linha.
+// 04 IA aplicada, 05 Infra e deploy e 06 Práticas não têm ícone no acervo
+// e ficam sem, nunca ícone forçado.
+const ICONES_POR_FRENTE = [
+  [iconeKotlin],
+  [iconeVue, iconeJs, iconeCss, iconeHtml],
+  [iconeSpringBoot, iconePhp],
+  [],
+  [],
+  [],
 ]
 
 const NUMEROS = ['01', '02', '03', '04', '05', '06']
@@ -44,7 +63,24 @@ function apagar() {
         @mouseleave="apagar"
       >
         <span class="skillset__numero" data-testid="skillset-number">{{ NUMEROS[indice] }}</span>
-        <h3 class="skillset__nome" data-testid="skillset-name">{{ grupo.label }}</h3>
+        <h3 class="skillset__nome" data-testid="skillset-name">
+          {{ grupo.label }}
+          <span
+            v-if="ICONES_POR_FRENTE[indice].length"
+            class="skillset__icones"
+            data-testid="skillset-icons"
+          >
+            <img
+              v-for="icone in ICONES_POR_FRENTE[indice]"
+              :key="icone"
+              :src="icone"
+              alt=""
+              aria-hidden="true"
+              loading="lazy"
+              decoding="async"
+            />
+          </span>
+        </h3>
         <p class="skillset__descricao" data-testid="skillset-description">
           {{ grupo.description }}
         </p>
@@ -116,6 +152,22 @@ function apagar() {
   letter-spacing: -0.01em;
   line-height: 1.05;
   margin: 0;
+}
+
+/* Ícones decorativos junto ao nome, fora do alcance do cursor pra não
+   roubar o hover da linha */
+.skillset__icones {
+  display: inline-flex;
+  gap: 0.5rem;
+  margin-left: 0.75rem;
+  vertical-align: middle;
+}
+
+.skillset__icones img {
+  height: 2rem;
+  object-fit: contain;
+  pointer-events: none;
+  width: 2rem;
 }
 
 .skillset__descricao {
