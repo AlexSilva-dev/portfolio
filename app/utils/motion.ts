@@ -38,3 +38,29 @@ export function computeProgress(elapsedMs: number, ceilingMs: number): number {
   const clamped = Math.min(Math.max(elapsedMs, 0), ceilingMs)
   return Math.round((clamped / ceilingMs) * 100)
 }
+
+/** Progresso de rolagem em que o brilho do rodapé começa a acender (rodapé já em cena). */
+export const INICIO_BRILHO_RODAPE = 0.8
+
+/** Intensidade fixa do brilho quando o sistema pede movimento reduzido. */
+export const BRILHO_MEDIO_RODAPE = 0.5
+
+/**
+ * Mapeia progresso de rolagem (0 a 1) pra intensidade do brilho do rodapé
+ * (0 a 1). Apagado até o rodapé entrar em cena, curva suave (smoothstep)
+ * até acender por completo no fim da página. Entradas fora de 0 a 1 são
+ * presas nos limites, NaN conta como zero.
+ */
+export function intensidadeBrilhoRodape(
+  progressoRolagem: number,
+  inicio: number = INICIO_BRILHO_RODAPE,
+): number {
+  if (!(inicio >= 0) || inicio >= 1) {
+    throw new RangeError(`inicio precisa estar em [0, 1), recebi ${inicio}`)
+  }
+
+  if (Number.isNaN(progressoRolagem)) return 0
+
+  const t = Math.min(Math.max((progressoRolagem - inicio) / (1 - inicio), 0), 1)
+  return t * t * (3 - 2 * t)
+}

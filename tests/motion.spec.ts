@@ -1,6 +1,11 @@
 import { effectScope } from 'vue'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { PRELOADER_CEILING_MS, computeProgress } from '../app/utils/motion'
+import {
+  INICIO_BRILHO_RODAPE,
+  PRELOADER_CEILING_MS,
+  computeProgress,
+  intensidadeBrilhoRodape,
+} from '../app/utils/motion'
 import { usePrefersReducedMotion } from '../app/composables/usePrefersReducedMotion'
 
 class FakeMediaQueryList {
@@ -105,5 +110,37 @@ describe('usePrefersReducedMotion', () => {
     const { composable } = setupComposable()
 
     expect(composable.prefersReducedMotion.value).toBe(false)
+  })
+})
+
+describe('intensidadeBrilhoRodape', () => {
+  it('apagado no topo e em todo o trecho antes do inicio da faixa', () => {
+    expect(intensidadeBrilhoRodape(0)).toBe(0)
+    expect(intensidadeBrilhoRodape(0.5)).toBe(0)
+    expect(intensidadeBrilhoRodape(INICIO_BRILHO_RODAPE)).toBe(0)
+  })
+
+  it('comeca a acender depois do inicio com curva suave', () => {
+    expect(intensidadeBrilhoRodape(0.9)).toBeCloseTo(0.5, 5)
+    expect(intensidadeBrilhoRodape(0.95)).toBeCloseTo(0.84375, 5)
+  })
+
+  it('aceso por completo no fim da rolagem', () => {
+    expect(intensidadeBrilhoRodape(1)).toBe(1)
+  })
+
+  it('satura em 1 acima do fim e nunca fica negativo abaixo de zero', () => {
+    expect(intensidadeBrilhoRodape(1.4)).toBe(1)
+    expect(intensidadeBrilhoRodape(-2)).toBe(0)
+  })
+
+  it('trata NaN como zero, nunca brilho fantasma', () => {
+    expect(intensidadeBrilhoRodape(Number.NaN)).toBe(0)
+  })
+
+  it('rejeita inicio fora do intervalo meio aberto [0, 1) com erro claro', () => {
+    expect(() => intensidadeBrilhoRodape(0.5, 1)).toThrow(RangeError)
+    expect(() => intensidadeBrilhoRodape(0.5, 1.2)).toThrow(RangeError)
+    expect(() => intensidadeBrilhoRodape(0.5, -0.1)).toThrow(RangeError)
   })
 })

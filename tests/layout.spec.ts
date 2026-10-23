@@ -204,6 +204,116 @@ describe('SiteFooter (CSS editorial)', () => {
   })
 })
 
+describe('SiteFooter brilho (CSS editorial)', () => {
+  const fonte = readFileSync(
+    join(import.meta.dirname, '..', 'app', 'components', 'SiteFooter.vue'),
+    'utf-8',
+  )
+
+  it('colunas de luz em violeta via token, com gradiente linear e radial empilhados', () => {
+    const coluna = fonte.match(/\.site-footer__coluna\s*\{([^}]*)\}/)?.[1] ?? ''
+    expect(coluna).toContain('linear-gradient')
+    expect(coluna).toContain('var(--color-accent)')
+    const poca = fonte.match(/\.site-footer__brilho\s*\{([^}]*)\}/)?.[1] ?? ''
+    expect(poca).toContain('radial-gradient')
+  })
+
+  it('bordas de coluna em pontilhado fino com repeating-linear-gradient', () => {
+    const borda = fonte.match(/\.site-footer__coluna-borda\s*\{([^}]*)\}/)?.[1] ?? ''
+    expect(borda).toContain('repeating-linear-gradient')
+    expect(borda).toContain('var(--color-accent)')
+  })
+
+  it('grão de noise embutido como data URI SVG com feTurbulence, sem asset externo', () => {
+    const grao = fonte.match(/\.site-footer__grao\s*\{([^}]*)\}/)?.[1] ?? ''
+    expect(grao).toContain('data:image/svg+xml')
+    expect(grao).toContain('feTurbulence')
+  })
+
+  it('camada de brilho anima só opacity, sem repaint pesado', () => {
+    const brilho = fonte.match(/\.site-footer__brilho\s*\{([^}]*)\}/)?.[1] ?? ''
+    expect(brilho).toContain('will-change: opacity')
+  })
+
+  it('nenhum hex cru no brilho nem no grão', () => {
+    expect(fonte).not.toMatch(/#[0-9a-fA-F]{3,8}\b/)
+  })
+})
+
+describe('SiteFooter brilho ligado a rolagem', () => {
+  function montar({ reduzido = false }: { reduzido?: boolean } = {}) {
+    vi.spyOn(window, 'matchMedia').mockImplementation(
+      () =>
+        ({
+          matches: reduzido,
+          addEventListener: vi.fn(),
+          removeEventListener: vi.fn(),
+        }) as MediaQueryList,
+    )
+
+    const raiz = document.createElement('div')
+    document.body.appendChild(raiz)
+    const app = createApp(SiteFooter)
+    app.mount(raiz)
+    return { app, raiz }
+  }
+
+  function definirRolagem(scrollY: number): void {
+    Object.defineProperty(window, 'scrollY', { value: scrollY, configurable: true })
+    Object.defineProperty(document.documentElement, 'scrollHeight', {
+      value: 5000,
+      configurable: true,
+    })
+    Object.defineProperty(window, 'innerHeight', { value: 768, configurable: true })
+  }
+
+  afterEach(() => {
+    document.body.innerHTML = ''
+    Object.defineProperty(window, 'scrollY', { value: 0, configurable: true })
+    vi.restoreAllMocks()
+  })
+
+  it('comeca apagado com a pagina no topo', () => {
+    definirRolagem(0)
+    const { raiz, app } = montar()
+
+    const brilho = raiz.querySelector('[data-testid="footer-brilho"]') as HTMLElement
+    expect(brilho).toBeTruthy()
+    expect(brilho.style.opacity).toBe('0')
+
+    app.unmount()
+  })
+
+  it('fica aceso por completo quando a rolagem chega ao fim da pagina', async () => {
+    definirRolagem(0)
+    const { raiz, app } = montar()
+
+    definirRolagem(5000)
+    window.dispatchEvent(new Event('scroll'))
+    await nextTick()
+
+    const brilho = raiz.querySelector('[data-testid="footer-brilho"]') as HTMLElement
+    expect(brilho.style.opacity).toBe('1')
+
+    app.unmount()
+  })
+
+  it('reduced motion deixa o brilho estatico num brilho medio, sem ouvir rolagem', async () => {
+    definirRolagem(5000)
+    const { raiz, app } = montar({ reduzido: true })
+    await nextTick()
+
+    const brilho = raiz.querySelector('[data-testid="footer-brilho"]') as HTMLElement
+    expect(Number(brilho.style.opacity)).toBeCloseTo(0.5, 5)
+
+    window.dispatchEvent(new Event('scroll'))
+    await nextTick()
+    expect(Number(brilho.style.opacity)).toBeCloseTo(0.5, 5)
+
+    app.unmount()
+  })
+})
+
 describe('SiteFooter', () => {
   function montar() {
     const raiz = document.createElement('div')
