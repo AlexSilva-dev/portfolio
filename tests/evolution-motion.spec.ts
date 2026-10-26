@@ -339,12 +339,13 @@ describe('useParallax', () => {
 })
 
 describe('SectionEvolution', () => {
-  it('a polaroid usa o GIF animado alex.gif', () => {
+  it('a polaroid usa a ilustração vetorial em vez do gif', () => {
     stubMatchMedia(true, false)
     const { root } = montarSectionEvolution()
 
-    const img = root.querySelector<HTMLImageElement>('[data-testid="evolution-gif"]')
-    expect(img?.getAttribute('src')).toContain('alex.gif')
+    const svg = root.querySelector('[data-testid="evolution-ilustracao"]')
+    expect(svg?.tagName.toLowerCase()).toBe('svg')
+    expect(root.querySelector('[data-testid="evolution-gif"]')).toBeNull()
   })
 
   it('polaroid fica sob parallax de scroll e tilt de ponteiro', () => {

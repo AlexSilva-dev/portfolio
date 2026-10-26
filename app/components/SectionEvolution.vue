@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import gifAlex from '../assets/gifs/alex.gif'
+import EvolutionIllustration from './EvolutionIllustration.vue'
 import { useParallax } from '../composables/useParallax'
 import { useTilt } from '../composables/useTilt'
 import { useCursorLit } from '../composables/useCursorLit'
@@ -26,12 +26,12 @@ const polaroideEl = ref<HTMLElement | null>(null)
 useParallax(polaroideEl)
 useTilt(polaroideEl)
 
-// Alt descritivo por idioma, mesmo padrão de rótulos do SectionIntro
-const ALTS = {
-  pt: 'GIF antigo de Alex Alves programando no computador, registro da trajetória dele até hoje',
-  en: 'Old GIF of Alex Alves coding on a computer, a record of his journey to the present',
+// Legenda curta da moldura, sem ano inventado, só o arco que o texto conta
+const LEGENDAS = {
+  pt: 'Do primeiro computador ao CRM com IA',
+  en: 'From the first computer to the AI CRM',
 } as const
-const alt = computed(() => ALTS[locale.value] ?? ALTS.pt)
+const legenda = computed(() => LEGENDAS[locale.value] ?? LEGENDAS.pt)
 </script>
 
 <template>
@@ -44,15 +44,10 @@ const alt = computed(() => ALTS[locale.value] ?? ALTS.pt)
         class="evolucao__polaroide"
         data-testid="evolution-polaroide"
       >
-        <img
-          :src="gifAlex"
-          :alt="alt"
-          width="864"
-          height="864"
-          decoding="async"
-          loading="lazy"
-          data-testid="evolution-gif"
-        />
+        <EvolutionIllustration />
+        <figcaption class="evolucao__legenda" data-testid="evolution-legenda">
+          {{ legenda }}
+        </figcaption>
       </figure>
     </div>
   </section>
@@ -112,22 +107,28 @@ const alt = computed(() => ALTS[locale.value] ?? ALTS.pt)
   will-change: transform;
 }
 
-.evolucao__polaroide img {
-  display: block;
-  filter: grayscale(1);
-  height: auto;
-  transition: filter 0.3s ease;
+.evolucao__polaroide .evolucao-ilustracao {
   width: clamp(11rem, 22vw, 17rem);
 }
 
+.evolucao__legenda {
+  color: color-mix(in srgb, var(--color-ink) 58%, transparent);
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.14em;
+  line-height: 1.5;
+  margin-top: 0.75rem;
+  text-transform: uppercase;
+}
+
 @media (hover: hover) {
-  .evolucao__polaroide:hover img {
-    filter: grayscale(0);
+  .evolucao__polaroide:hover :deep(.evolucao-ilustracao__glow) {
+    opacity: 0.16;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .evolucao__polaroide img,
+  .evolucao__polaroide :deep(.evolucao-ilustracao__glow),
   .evolucao__texto :deep(.evolucao__palavra) {
     transition: none;
   }

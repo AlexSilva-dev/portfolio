@@ -196,7 +196,7 @@ describe('Home — conteúdo das seções', () => {
   })
 })
 
-describe('Home — bloco de evolução com polaroid do GIF', () => {
+describe('Home — bloco de evolução com polaroid ilustrada', () => {
   it('renderiza o parágrafo 2 do dicionário about', () => {
     const root = montar('pt')
     const texto = root.querySelector('[data-testid="evolution-texto"]')
@@ -209,28 +209,47 @@ describe('Home — bloco de evolução com polaroid do GIF', () => {
     expect(texto?.textContent?.trim()).toBe(getDictionary('en').sections.about.paragraphs[1])
   })
 
-  it('a polaroid exibe o GIF alex.gif com alt descritivo', () => {
+  it('a polaroid exibe a ilustração vetorial com titulo descritivo', () => {
     const root = montar('pt')
-    const img = root.querySelector<HTMLImageElement>('[data-testid="evolution-gif"]')
-    expect(img, 'imagem do GIF ausente').not.toBeNull()
-    expect(img?.getAttribute('src'), 'src do GIF ausente').toBeTruthy()
-    expect(img?.alt.trim().length ?? 0).toBeGreaterThan(10)
-    expect(fonteSectionEvolution()).toContain('alex.gif')
+    const svg = root.querySelector<SVGSVGElement>('[data-testid="evolution-ilustracao"]')
+    expect(svg, 'ilustração ausente').not.toBeNull()
+    expect(svg?.getAttribute('role')).toBe('img')
+    const titulo = svg?.querySelector('title')?.textContent?.trim() ?? ''
+    expect(titulo.length).toBeGreaterThan(20)
+    const fonte = fonteSectionEvolution()
+    expect(fonte).not.toContain('alex.gif')
+    expect(fonte).toContain('EvolutionIllustration')
   })
 
-  it('em en o alt troca com o idioma', () => {
-    const root = montar('en')
-    const img = root.querySelector<HTMLImageElement>('[data-testid="evolution-gif"]')
-    const altPt = montar('pt').querySelector<HTMLImageElement>('[data-testid="evolution-gif"]')?.alt
-    expect(img?.alt).not.toBe(altPt)
+  it('em en o titulo da ilustração troca com o idioma', () => {
+    const tituloPt = montar('pt')
+      .querySelector('[data-testid="evolution-ilustracao"] title')
+      ?.textContent?.trim()
+    const tituloEn = montar('en')
+      .querySelector('[data-testid="evolution-ilustracao"] title')
+      ?.textContent?.trim()
+    expect(tituloEn).not.toBe(tituloPt)
+    expect((tituloEn ?? '').length).toBeGreaterThan(20)
   })
 
-  it('polaroid inclinada com moldura clara, sombra difusa e foto em escala de cinza', () => {
+  it('a legenda da polaroid aparece e troca com o idioma', () => {
+    const legendaPt = montar('pt')
+      .querySelector('[data-testid="evolution-legenda"]')
+      ?.textContent?.trim()
+    const legendaEn = montar('en')
+      .querySelector('[data-testid="evolution-legenda"]')
+      ?.textContent?.trim()
+    expect(legendaPt).toContain('CRM')
+    expect(legendaEn?.toLowerCase()).toContain('ai')
+    expect(legendaEn).not.toBe(legendaPt)
+  })
+
+  it('polaroid inclinada com moldura clara, sombra difusa e acento em violeta', () => {
     const css = fonteSectionEvolution()
     expect(css).toMatch(/\.evolucao__polaroide\s*\{[^}]*transform:\s*rotate\(-?6deg\)/)
     expect(css).toMatch(/\.evolucao__polaroide\s*\{[^}]*box-shadow:[^;}]*color-mix/)
     expect(css).toMatch(/\.evolucao__polaroide\s*\{[^}]*background:\s*var\(--color-paper\)/)
-    expect(css).toMatch(/\.evolucao__polaroide img\s*\{[^}]*filter:\s*grayscale\(1\)/)
+    expect(css).not.toMatch(/grayscale\(1\)/)
   })
 })
 
