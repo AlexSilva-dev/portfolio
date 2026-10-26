@@ -1,6 +1,6 @@
-import previewCrm from '../assets/img/unify-eventos.webp'
-import previewUca from '../assets/img/mata-mosquisto.webp'
-import previewCap from '../assets/img/code.webp'
+import previewCrm from '../assets/img/preview-crm-adsalesbrazil.webp'
+import previewUca from '../assets/img/preview-ucatech.webp'
+import previewCap from '../assets/img/preview-check-all-pages.webp'
 
 export type ProjectStatus = 'production' | 'wip' | 'tool' | 'neutral'
 

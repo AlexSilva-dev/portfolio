@@ -234,7 +234,7 @@ onUnmounted(() => {
 }
 
 .project-row__preview {
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 16 / 10;
   object-fit: cover;
   opacity: 0;
   pointer-events: none;
