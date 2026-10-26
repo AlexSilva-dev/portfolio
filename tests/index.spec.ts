@@ -166,14 +166,18 @@ describe('Home — conteúdo das seções', () => {
     expect(grid?.textContent).toContain(dict.projects.items[0].papel)
   })
 
-  it('a seção de projetos renderiza 3 linhas, todas com link externo', () => {
+  it('a seção de projetos renderiza 4 linhas, 3 com link externo e o case sem âncora', () => {
     const root = montar('pt')
+    const dict = getDictionary('pt').sections
     const linhas = root.querySelectorAll('#projetos [data-testid="project-row"]')
-    expect(linhas).toHaveLength(3)
-    linhas.forEach((linha) => {
-      expect(linha.tagName).toBe('A')
-      expect(linha.getAttribute('target')).toBe('_blank')
-    })
+    expect(linhas).toHaveLength(4)
+    for (const i of [0, 1, 2]) {
+      expect(linhas[i].tagName).toBe('A')
+      expect(linhas[i].getAttribute('target')).toBe('_blank')
+    }
+    expect(linhas[3].tagName).toBe('ARTICLE')
+    expect(linhas[3].querySelector('a')).toBeNull()
+    expect(linhas[3].textContent).toContain(dict.projects.items[3].name)
   })
 
   it('skillset renderiza as 6 linhas numeradas na seção escura', () => {

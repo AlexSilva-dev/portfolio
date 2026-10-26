@@ -24,7 +24,8 @@ const DURACAO_PERSEGUICAO_SEG = 0.5
 const DURACAO_FADE_SEG = 0.3
 
 // Com url a linha inteira é clicável, sem url nenhum elemento clicável.
-// O SaaS (sem url) mantém o selo neutro de dot e texto e nenhuma âncora.
+// A linha do case profissional (sem url) mantém o selo neutro de dot e texto,
+// nenhuma âncora e o preview acende no hover sem perseguir o cursor.
 const linkAttrs = computed(() =>
   props.project.url
     ? { href: props.project.url, target: '_blank', rel: 'noopener' }
@@ -278,7 +279,7 @@ onUnmounted(() => {
     color: var(--color-accent-deep);
   }
 
-  .project-row--link:hover .project-row__preview {
+  .project-row:hover .project-row__preview {
     opacity: 1;
   }
 }

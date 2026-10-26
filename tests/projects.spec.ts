@@ -33,16 +33,21 @@ afterEach(() => {
 })
 
 describe('conteúdo estruturado de projetos', () => {
-  it('expõe 3 projetos na ordem CRM, UcaTech e Check All Pages', () => {
+  it('expõe 4 projetos na ordem CRM, UcaTech, Check All Pages e o case de qualificação', () => {
     expect(projects.map((p) => p.slug)).toEqual([
       'crm-adsalesbrazil',
       'ucatech',
       'check-all-pages',
+      'atendimento-qualificacao-ia',
     ])
   })
 
   it('define o status de cada projeto na ordem', () => {
-    expect(projects.map((p) => p.status)).toEqual(['production', 'wip', 'tool'])
+    expect(projects.map((p) => p.status)).toEqual(['production', 'wip', 'tool', 'neutral'])
+  })
+
+  it('o case de qualificação não tem url pública, o projeto é de empresa', () => {
+    expect(projects[3].url).toBeUndefined()
   })
 
   it('linka CRM ao site oficial, UcaTech ao site oficial e Check All Pages ao repositório', () => {
@@ -63,17 +68,17 @@ describe('conteúdo estruturado de projetos', () => {
 describe('dicionário projects', () => {
   it('tem título e kicker em pt', () => {
     expect(pt.heading).toBe('Projetos')
-    expect(pt.kicker).toBe('O que eu construo por conta própria')
+    expect(pt.kicker).toBe('Projetos e cases')
   })
 
   it('tem título e kicker em en', () => {
     expect(en.heading).toBe('Projects')
-    expect(en.kicker).toBe('What I build on my own')
+    expect(en.kicker).toBe('Projects and case studies')
   })
 
-  it('traduz os 3 itens 1 para 1 entre pt e en', () => {
-    expect(pt.items).toHaveLength(3)
-    expect(en.items).toHaveLength(3)
+  it('traduz os 4 itens 1 para 1 entre pt e en', () => {
+    expect(pt.items).toHaveLength(4)
+    expect(en.items).toHaveLength(4)
     for (const item of [...pt.items, ...en.items]) {
       expect(Object.keys(item).sort()).toEqual([
         'badge',
@@ -92,6 +97,7 @@ describe('dicionário projects', () => {
       { papel: 'Sócio-fundador e responsável técnico', periodo: '2026 até hoje', time: 'AdSalesBrazil' },
       { papel: 'Idealizador e desenvolvedor solo', periodo: '2025 a 2026', time: 'Projeto pessoal' },
       { papel: 'Autor', periodo: '2025', time: 'Projeto pessoal' },
+      { papel: 'Arquiteto e desenvolvedor da automação', periodo: '2023 a 2025', time: 'Tedsys' },
     ])
   })
 
@@ -100,6 +106,7 @@ describe('dicionário projects', () => {
       { papel: 'Co-founder and technical lead', periodo: '2026 to today', time: 'AdSalesBrazil' },
       { papel: 'Creator and solo developer', periodo: '2025 to 2026', time: 'Personal project' },
       { papel: 'Author', periodo: '2025', time: 'Personal project' },
+      { papel: 'Automation architect and developer', periodo: '2023 to 2025', time: 'Tedsys' },
     ])
   })
 
@@ -108,11 +115,13 @@ describe('dicionário projects', () => {
       'CRM AdSalesBrazil',
       'UcaTech',
       'Check All Pages',
+      'Atendimento e qualificação de leads com IA',
     ])
     expect(pt.items.map((item) => item.badge)).toEqual([
       'Produto em produção',
       'Em desenvolvimento',
       'Ferramenta de linha de comando',
+      'Case profissional',
     ])
   })
 
@@ -121,11 +130,13 @@ describe('dicionário projects', () => {
       'CRM AdSalesBrazil',
       'UcaTech',
       'Check All Pages',
+      'Customer support and AI lead qualification',
     ])
     expect(en.items.map((item) => item.badge)).toEqual([
       'Product in production',
       'In development',
       'Command line tool',
+      'Professional case',
     ])
   })
 
@@ -134,11 +145,13 @@ describe('dicionário projects', () => {
       ['IA', 'Docker', 'Meta API'],
       ['Kotlin', 'Kotlin Multiplatform'],
       ['Kotlin', 'CLI', 'Lighthouse'],
+      ['n8n', 'Z-API', 'Bitrix24', 'RAG', 'OpenAI'],
     ])
     expect(en.items.map((item) => item.chips)).toEqual([
       ['AI', 'Docker', 'Meta API'],
       ['Kotlin', 'Kotlin Multiplatform'],
       ['Kotlin', 'CLI', 'Lighthouse'],
+      ['n8n', 'Z-API', 'Bitrix24', 'RAG', 'OpenAI'],
     ])
   })
 })
@@ -207,7 +220,7 @@ describe('preview dos projetos no conteúdo', () => {
         `preview do projeto ${i} não existe em app/assets/img`,
       ).toBe(true)
     })
-    expect(nomes.size, 'cada linha usa um preview distinto').toBe(3)
+    expect(nomes.size, 'cada linha usa um preview distinto').toBe(4)
   })
 })
 
@@ -231,12 +244,12 @@ describe('dicionário projects, labels editoriais', () => {
 
 function linhasRenderizadas(root: HTMLElement): HTMLElement[] {
   const linhas = [...root.querySelectorAll('[data-testid="project-row"]')]
-  expect(linhas, 'esperava 3 linhas renderizadas').toHaveLength(3)
+  expect(linhas, 'esperava 4 linhas renderizadas').toHaveLength(4)
   return linhas as HTMLElement[]
 }
 
 describe('ProjectRow, lista editorial', () => {
-  it('renderiza as 3 linhas com os nomes na ordem CRM, UcaTech e Check All Pages', () => {
+  it('renderiza as 4 linhas com os nomes na ordem CRM, UcaTech, Check All Pages e o case', () => {
     const { root, app } = montarLinhas()
     const nomes = linhasRenderizadas(root).map(
       (linha) => linha.querySelector('[data-testid="project-row-name"]')?.textContent?.trim(),
@@ -297,6 +310,19 @@ describe('ProjectRow, lista editorial', () => {
     app.unmount()
   })
 
+  it('linha sem link vira article, sem âncora e sem botão Ver projeto, com selo de case', () => {
+    const { root, app } = montarLinhas()
+    const caso = linhasRenderizadas(root)[3]
+    expect(caso.tagName).toBe('ARTICLE')
+    expect(caso.querySelector('a')).toBeNull()
+    expect(caso.querySelector('[data-testid="project-row-cta"]')).toBeNull()
+    const selo = caso.querySelector('[data-testid="status-badge"]')
+    expect(selo, 'selo do case ausente').toBeTruthy()
+    expect(selo!.classList.contains('status-badge--neutral')).toBe(true)
+    expect(selo!.textContent).toContain(pt.items[3].badge)
+    app.unmount()
+  })
+
   it('cada linha revela um preview de imagem em sobreposição', () => {
     const { root, app } = montarLinhas()
     linhasRenderizadas(root).forEach((linha, i) => {
@@ -340,10 +366,11 @@ describe('regra de link na lista editorial', () => {
     app.unmount()
   })
 
-  it('UcaTech carrega selo, CRM e Check All Pages são linhas limpas', () => {
+  it('UcaTech e o case carregam selo, CRM e Check All Pages são linhas limpas', () => {
     const { root, app } = montarLinhas()
     const linhas = linhasRenderizadas(root)
     expect(linhas[1].querySelector('[data-testid="status-badge"]'), 'selo ausente no UcaTech').toBeTruthy()
+    expect(linhas[3].querySelector('[data-testid="status-badge"]'), 'selo ausente no case').toBeTruthy()
     for (const i of [0, 2]) {
       expect(linhas[i].querySelector('[data-testid="status-badge"]'), `selo inesperado na linha ${i}`).toBeNull()
     }
@@ -368,11 +395,11 @@ describe('composição editorial da linha (CSS)', () => {
     )
   })
 
-  it('preview é sobreposição absoluta, nasce invisível e acende no hover sem empurrar layout', () => {
+  it('preview é sobreposição absoluta, nasce invisível e acende no hover de qualquer linha', () => {
     expect(css()).toMatch(/\.project-row__preview\s*\{[^}]*position:\s*absolute/)
     expect(css()).toMatch(/\.project-row__preview\s*\{[^}]*opacity:\s*0/)
     expect(css()).toMatch(
-      /@media \(hover: hover\)[\s\S]*?\.project-row--link:hover[\s\S]*?\.project-row__preview[\s\S]*?opacity:\s*1/,
+      /@media \(hover: hover\)[\s\S]*?\.project-row:hover[\s\S]*?\.project-row__preview[\s\S]*?opacity:\s*1/,
     )
   })
 
@@ -497,6 +524,18 @@ function montarLinhaUnica(index = 0) {
 }
 
 describe('ProjectRow, preview perseguindo o cursor', () => {
+  it('linha sem link, o case, não persegue o cursor nem cria quickTo', () => {
+    stubMidia(true)
+    const quickToSpy = vi.spyOn(gsap, 'quickTo').mockImplementation(() => vi.fn() as never)
+
+    const { app, linha } = montarLinhaUnica(3)
+    linha.dispatchEvent(new MouseEvent('mouseenter', { clientX: 5000 }))
+    linha.dispatchEvent(new MouseEvent('mousemove', { clientX: 6000 }))
+
+    expect(quickToSpy).not.toHaveBeenCalled()
+    app.unmount()
+  })
+
   afterEach(() => {
     vi.unstubAllGlobals()
     vi.restoreAllMocks()

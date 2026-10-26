@@ -1,6 +1,6 @@
 export const pt = {
   heading: 'Projetos',
-  kicker: 'O que eu construo por conta própria',
+  kicker: 'Projetos e cases',
   verProjeto: 'Ver projeto',
   meta: {
     papel: 'Papel',
@@ -36,6 +36,15 @@ export const pt = {
       periodo: '2025',
       time: 'Projeto pessoal',
     },
+    {
+      name: 'Atendimento e qualificação de leads com IA',
+      badge: 'Case profissional',
+      summary: 'Atendimento e qualificação de leads no WhatsApp com n8n, Z-API e Bitrix24. A IA entende texto, áudio e imagem, consulta uma base RAG alimentada pelo time de vendas, cria e move o card no CRM e agenda reunião sozinha. Resolveu cerca de 80% das interações sem intervenção humana, com atendimento 24 horas.',
+      chips: ['n8n', 'Z-API', 'Bitrix24', 'RAG', 'OpenAI'],
+      papel: 'Arquiteto e desenvolvedor da automação',
+      periodo: '2023 a 2025',
+      time: 'Tedsys',
+    },
   ],
 }
 
@@ -43,7 +52,7 @@ export type ProjectsDict = typeof pt
 
 export const en: ProjectsDict = {
   heading: 'Projects',
-  kicker: 'What I build on my own',
+  kicker: 'Projects and case studies',
   verProjeto: 'View project',
   meta: {
     papel: 'Role',
@@ -78,6 +87,15 @@ export const en: ProjectsDict = {
       papel: 'Author',
       periodo: '2025',
       time: 'Personal project',
+    },
+    {
+      name: 'Customer support and AI lead qualification',
+      badge: 'Professional case',
+      summary: 'WhatsApp customer support and lead qualification with n8n, Z-API and Bitrix24. The AI understands text, audio and images, queries a RAG base fed by the sales team, creates and moves the CRM card and books meetings on its own. It resolved around 80% of interactions without human intervention, with round-the-clock support.',
+      chips: ['n8n', 'Z-API', 'Bitrix24', 'RAG', 'OpenAI'],
+      papel: 'Automation architect and developer',
+      periodo: '2023 to 2025',
+      time: 'Tedsys',
     },
   ],
 }
