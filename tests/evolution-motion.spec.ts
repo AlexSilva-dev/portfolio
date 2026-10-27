@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createApp, defineComponent, h, nextTick, ref, type Ref } from 'vue'
 import { gsap } from 'gsap'
@@ -346,6 +348,16 @@ describe('SectionEvolution', () => {
     const svg = root.querySelector('[data-testid="evolution-ilustracao"]')
     expect(svg?.tagName.toLowerCase()).toBe('svg')
     expect(root.querySelector('[data-testid="evolution-gif"]')).toBeNull()
+  })
+
+  it('a ilustração anima o caminho e o nó quando o movimento é permitido', () => {
+    const fonte = readFileSync(
+      join(import.meta.dirname, '..', 'app', 'components', 'EvolutionIllustration.vue'),
+      'utf-8',
+    )
+    expect(fonte).toMatch(/@keyframes evolucao-caminho-correr/)
+    expect(fonte).toMatch(/@keyframes evolucao-no-pulsar/)
+    expect(fonte).toMatch(/@media \(prefers-reduced-motion: reduce\)[\s\S]*?animation:\s*none/)
   })
 
   it('polaroid fica sob parallax de scroll e tilt de ponteiro', () => {

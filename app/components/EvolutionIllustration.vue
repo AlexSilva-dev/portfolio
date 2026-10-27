@@ -92,7 +92,15 @@ onBeforeUnmount(() => observador?.disconnect())
         <path d="M196 418h176" />
         <path d="M196 450h84" />
       </g>
-      <rect x="292" y="438" width="12" height="22" fill="var(--color-accent-deep)" stroke="none" />
+      <rect
+        class="evolucao-ilustracao__cursor"
+        x="292"
+        y="438"
+        width="12"
+        height="22"
+        fill="var(--color-accent-deep)"
+        stroke="none"
+      />
       <path d="M292 570h46l14 38h-74z" fill="var(--color-paper)" stroke-width="5" />
       <path d="M250 608h136" stroke-width="6" />
     </g>
@@ -204,6 +212,63 @@ onBeforeUnmount(() => observador?.disconnect())
   .evolucao-ilustracao.is-animavel.is-visivel .evolucao-ilustracao__no {
     opacity: 1;
     transition: opacity 0.5s ease 0.8s;
+  }
+
+  /* O caminho corre em direção ao nó, o nó pulsa e o cursor pisca, tudo
+     depois que a cena entra em vista. Movimento reduzido não recebe nada. */
+  .evolucao-ilustracao.is-animavel.is-visivel .evolucao-ilustracao__caminho {
+    animation: evolucao-caminho-correr 3s linear infinite;
+  }
+
+  .evolucao-ilustracao.is-animavel.is-visivel .evolucao-ilustracao__glow {
+    animation: evolucao-no-pulsar 1.1s ease-in-out 2;
+  }
+
+  .evolucao-ilustracao.is-animavel.is-visivel .evolucao-ilustracao__cursor {
+    animation: evolucao-cursor-piscar 1.2s steps(2, jump-none) infinite;
+  }
+}
+
+.evolucao-ilustracao__caminho,
+.evolucao-ilustracao__glow,
+.evolucao-ilustracao__cursor {
+  will-change: opacity;
+}
+
+@keyframes evolucao-caminho-correr {
+  to {
+    stroke-dashoffset: -32;
+  }
+}
+
+@keyframes evolucao-no-pulsar {
+  0%,
+  100% {
+    opacity: 0;
+  }
+
+  50% {
+    opacity: 0.18;
+  }
+}
+
+@keyframes evolucao-cursor-piscar {
+  0%,
+  49% {
+    opacity: 1;
+  }
+
+  50%,
+  100% {
+    opacity: 0.15;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .evolucao-ilustracao__caminho,
+  .evolucao-ilustracao__glow,
+  .evolucao-ilustracao__cursor {
+    animation: none;
   }
 }
 </style>
