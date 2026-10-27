@@ -2,6 +2,7 @@ import { join } from 'node:path'
 import { readFileSync } from 'node:fs'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createApp, defineComponent, h, nextTick, ref } from 'vue'
+import { gsap } from 'gsap'
 import type { Component } from 'vue'
 
 const { ScrollTriggerMock } = vi.hoisted(() => ({
@@ -247,11 +248,21 @@ describe('useCursorLit', () => {
     expect(normalizar(raiz.textContent)).toBe(TEXTO_PT)
   })
 
-  it('sem ponteiro fino, touch, o texto fica integralmente aceso e estatico', () => {
+  it('sem ponteiro fino, touch, o texto acende por scroll com scrub', () => {
     stubMatchMedia(false)
+    const espiao = vi.spyOn(gsap, 'fromTo')
     const { raiz } = montarHospedeiro({ texto: () => TEXTO_PT })
-    expect(raiz.querySelectorAll('.evolucao__palavra')).toHaveLength(0)
+
+    const spans = [...raiz.querySelectorAll<HTMLElement>('.evolucao__palavra')]
+    expect(spans).toHaveLength(dividirEmPalavras(TEXTO_PT).length)
+    expect(spans.every((span) => span.style.opacity === String(OPACIDADE_DIM))).toBe(true)
     expect(normalizar(raiz.textContent)).toBe(TEXTO_PT)
+
+    expect(espiao).toHaveBeenCalled()
+    const variaveis = espiao.mock.calls.at(-1)?.[2] as Record<string, unknown>
+    const gatilho = variaveis.scrollTrigger as Record<string, unknown>
+    expect(gatilho.trigger).toBe(raiz.querySelector('[data-testid="alvo"]'))
+    expect(gatilho.scrub).toBe(true)
   })
 
   it('movimento reduzido ligado depois do mount restaura o texto aceso', async () => {

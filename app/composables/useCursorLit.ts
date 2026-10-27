@@ -1,6 +1,11 @@
 import { onMounted, onUnmounted, watch, type Ref } from 'vue'
+import { gsap } from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { usePrefersReducedMotion } from './usePrefersReducedMotion'
 import { dividirEmPalavras, indicesDoDestaque } from './useTextFill'
+import { agendarRefreshGatilhos } from '../utils/motion'
+
+gsap.registerPlugin(ScrollTrigger)
 
 const POINTER_FINE_QUERY = '(pointer: fine)'
 const CLASSE_PALAVRA = 'evolucao__palavra'
@@ -62,8 +67,10 @@ export function acendeNoRaio(cursor: Ponto, centro: Ponto, raio: number): boolea
  * Acendimento por cursor, parágrafo 2 do bloco de evolução. O texto integral
  * já está no HTML, as spans por palavra nascem em runtime e o estado dim é
  * aplicado só por JavaScript, sem JavaScript o parágrafo fica 100% aceso.
- * Palavra acesa permanece acesa, a leitura marca o texto. Movimento reduzido
- * e ponteiro que não é fino (touch) ficam de fora, texto estático integral.
+ * Palavra acesa permanece acesa, a leitura marca o texto. Ponteiro grosso
+ * (touch) não tem cursor, então lá o acendimento vira progresso de leitura
+ * com ScrollTrigger e scrub, palavra por palavra, mantendo o destaque. Só
+ * movimento reduzido fica de fora, com o texto estático integral.
  */
 export function useCursorLit(alvo: Ref<HTMLElement | null>, opcoes: OpcoesUseCursorLit) {
   const { prefersReducedMotion } = usePrefersReducedMotion()
@@ -71,6 +78,8 @@ export function useCursorLit(alvo: Ref<HTMLElement | null>, opcoes: OpcoesUseCur
 
   let palavras: HTMLSpanElement[] = []
   let elEscutado: HTMLElement | null = null
+  let contexto: ReturnType<typeof gsap.context> | null = null
+  let cancelarRefresh: () => void = () => {}
 
   const aoMoverPonteiro = (evento: PointerEvent) => {
     const cursor = { x: evento.clientX, y: evento.clientY }
@@ -90,7 +99,34 @@ export function useCursorLit(alvo: Ref<HTMLElement | null>, opcoes: OpcoesUseCur
       elEscutado.removeEventListener('pointermove', aoMoverPonteiro as EventListener)
     }
     elEscutado = null
+    cancelarRefresh()
+    cancelarRefresh = () => {}
+    contexto?.revert()
+    contexto = null
     palavras = []
+  }
+
+  // Sem cursor, a leitura é o gesto. O parágrafo acende conforme atravessa
+  // a viewport, no mesmo método que o primeiro parágrafo usa no mobile.
+  const acenderPorLeitura = (el: HTMLElement) => {
+    contexto = gsap.context(() => {
+      gsap.fromTo(
+        palavras,
+        { opacity: OPACIDADE_DIM },
+        {
+          opacity: 1,
+          ease: 'none',
+          stagger: 0.1,
+          scrollTrigger: {
+            trigger: el,
+            start: 'top 85%',
+            end: 'bottom 60%',
+            scrub: true,
+          },
+        },
+      )
+    }, el)
+    cancelarRefresh = agendarRefreshGatilhos(() => ScrollTrigger.refresh())
   }
 
   const criarPalavras = (el: HTMLElement, texto: string) => {
@@ -122,17 +158,22 @@ export function useCursorLit(alvo: Ref<HTMLElement | null>, opcoes: OpcoesUseCur
 
     const texto = opcoes.texto()
 
-    // Movimento reduzido ou sem ponteiro fino: texto integralmente aceso,
-    // estático, sem spans. O efeito é camada progressiva de desktop.
-    if (prefersReducedMotion.value || !window.matchMedia(POINTER_FINE_QUERY).matches) {
+    // Movimento reduzido, texto integralmente aceso, estático, sem spans.
+    if (prefersReducedMotion.value) {
       el.textContent = texto
       return
     }
 
     criarPalavras(el, texto)
     palavras = [...el.querySelectorAll<HTMLSpanElement>(`.${CLASSE_PALAVRA}`)]
-    el.addEventListener('pointermove', aoMoverPonteiro as EventListener)
-    elEscutado = el
+
+    if (window.matchMedia(POINTER_FINE_QUERY).matches) {
+      el.addEventListener('pointermove', aoMoverPonteiro as EventListener)
+      elEscutado = el
+      return
+    }
+
+    acenderPorLeitura(el)
   }
 
   onMounted(ativar)
