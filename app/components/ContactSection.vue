@@ -227,6 +227,18 @@ const { copied, copyEmail } = useCopyEmail(EMAIL)
   filter: brightness(1.1);
 }
 
+@media (hover: none) {
+  .contato__acao:active {
+    filter: brightness(1.1);
+    transform: scale(0.98);
+  }
+
+  .contato__email:active,
+  .contato__link:active {
+    color: var(--color-accent);
+  }
+}
+
 .contato__seta {
   font-size: 1.125rem;
 }

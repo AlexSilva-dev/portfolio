@@ -292,6 +292,32 @@ onUnmounted(() => {
   }
 }
 
+@media (hover: none) {
+  /* Sem hover, o preview entra no fluxo e vira a imagem que abre a linha. */
+  .project-row__preview {
+    box-shadow: 0 1rem 2rem color-mix(in srgb, var(--color-ink) 18%, transparent);
+    margin-top: 1.25rem;
+    max-width: 30rem;
+    opacity: 1;
+    pointer-events: none;
+    position: static;
+    transform: rotate(-2deg);
+    width: 100%;
+  }
+
+  .project-row {
+    transition: background 0.2s ease;
+  }
+
+  .project-row--link:active {
+    background: color-mix(in srgb, var(--color-ink) 4%, transparent);
+  }
+
+  .project-row--link:active .project-row__nome {
+    color: var(--color-accent-deep);
+  }
+}
+
 @media (max-width: 767px) {
   .project-row__meta {
     grid-template-columns: repeat(2, minmax(0, 1fr));

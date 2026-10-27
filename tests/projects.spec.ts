@@ -395,6 +395,23 @@ describe('composição editorial da linha (CSS)', () => {
     )
   })
 
+  it('no celular o preview fica visivel e entra no fluxo, sem depender de hover', () => {
+    const fonte = css()
+    expect(fonte).toMatch(
+      /@media \(hover: none\)[\s\S]*?\.project-row__preview[^{]*\{[^}]*position:\s*static/,
+    )
+    expect(fonte).toMatch(
+      /@media \(hover: none\)[\s\S]*?\.project-row__preview[^{]*\{[^}]*opacity:\s*1/,
+    )
+  })
+
+  it('no toque a linha responde ao active, sem depender de hover', () => {
+    const fonte = css()
+    expect(fonte).toMatch(
+      /@media \(hover: none\)[\s\S]*?\:active[\s\S]*?color:\s*var\(--color-accent-deep\)/,
+    )
+  })
+
   it('preview é sobreposição absoluta, nasce invisível e acende no hover de qualquer linha', () => {
     expect(css()).toMatch(/\.project-row__preview\s*\{[^}]*position:\s*absolute/)
     expect(css()).toMatch(/\.project-row__preview\s*\{[^}]*opacity:\s*0/)

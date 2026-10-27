@@ -34,6 +34,11 @@ video {
   max-width: 100%;
 }
 
+a,
+button {
+  touch-action: manipulation;
+}
+
 a {
   color: var(--color-accent-deep);
 }

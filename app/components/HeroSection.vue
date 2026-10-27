@@ -303,11 +303,18 @@ useEntradaHero(raizEl)
   padding: 0.75rem 1.5rem;
   text-align: center;
   text-decoration: none;
-  transition: filter 0.15s ease;
+  transition: filter 0.15s ease, transform 0.12s ease;
 }
 
 .hero__cta:hover {
   filter: brightness(1.1);
+}
+
+@media (hover: none) {
+  .hero__cta:active {
+    filter: brightness(1.1);
+    transform: scale(0.98);
+  }
 }
 
 .hero__cta--primario {
